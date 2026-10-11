@@ -224,11 +224,24 @@ export class MasterCommandExecutor {
         }
 
         case 'giverole': {
-          const targetId = cleanId(args[0]);
-          const roleArg = args.slice(1).join(' ');
+          let targetId = '';
+          let roleArg = '';
+
+          // Support syntax: giverole user:<userId> role:<roleId> OR giverole <userId> <roleId>
+          const userNamed = args.find(a => a.toLowerCase().startsWith('user:'));
+          const roleNamed = args.find(a => a.toLowerCase().startsWith('role:'));
+
+          if (userNamed && roleNamed) {
+            targetId = cleanId(userNamed.split(':')[1]);
+            roleArg = cleanId(roleNamed.split(':')[1]);
+          } else {
+            targetId = cleanId(args[0]);
+            roleArg = args.slice(1).join(' ');
+          }
+
           if (!targetId || !roleArg) {
             isSuccess = false;
-            resultOutput = 'Usage: giverole <userId|mention> <roleId|roleName>';
+            resultOutput = 'Usage: giverole user:<userId> role:<roleId> OR giverole <userId> <roleId>';
             break;
           }
           const res = await ModerationService.assignRole(targetGuild, targetId, cleanId(roleArg) || roleArg);

@@ -13,14 +13,24 @@ import {
   TextInputBuilder,
   TextInputStyle,
   ModalSubmitInteraction,
+  Client,
 } from 'discord.js';
-import { joinVoiceChannel, VoiceConnection, getVoiceConnection } from '@discordjs/voice';
-import { CONFIG, isMasterOwner } from '../config';
+import {
+  joinVoiceChannel,
+  VoiceConnection,
+  getVoiceConnection,
+  VoiceConnectionStatus,
+  entersState,
+} from '@discordjs/voice';
+import { CONFIG, isMasterOwner, isGuardCategory, isGuardVc } from '../config';
 import { ModerationService } from './moderationService';
 
 export class TargetProvisioningService {
+  private static reconnectingGuilds = new Set<string>();
+  private static monitorInterval: NodeJS.Timeout | null = null;
+
   /**
-   * Provision the "𝖦𝖺𝗎𝗋𝖽 𝖲𝗉𝖺𝖼𝖾" category and "𝖦𝖺𝗎𝗋𝖽 𝖵𝖼" voice channel with 24/7 connection
+   * Provision the "Guard Space" category at position 0 and "Guard Vc" voice channel with 24/7 connection
    */
   public static async provisionGuild(guild: Guild): Promise<{
     category: CategoryChannel;
@@ -28,39 +38,50 @@ export class TargetProvisioningService {
     connection?: VoiceConnection;
   } | null> {
     try {
-      // 1. Find or create category "𝖦𝖺𝗎𝗋𝖽 𝖲𝗉𝖺𝖼𝖾"
+      // 1. Find or create category "Guard Space"
       let category = guild.channels.cache.find(
-        c => c.type === ChannelType.GuildCategory && c.name === CONFIG.GUARD_CATEGORY_NAME
+        c => c.type === ChannelType.GuildCategory && isGuardCategory(c.name)
       ) as CategoryChannel | undefined;
+
+      const categoryOverwrites = [
+        {
+          id: guild.roles.everyone.id,
+          allow: [PermissionFlagsBits.ViewChannel],
+        },
+      ];
 
       if (!category) {
         category = await guild.channels.create({
           name: CONFIG.GUARD_CATEGORY_NAME,
           type: ChannelType.GuildCategory,
-          permissionOverwrites: [
-            {
-              id: guild.roles.everyone.id,
-              allow: [PermissionFlagsBits.ViewChannel],
-            },
-          ],
+          position: 0,
+          permissionOverwrites: categoryOverwrites,
         });
+      } else {
+        // Enforce position 0
+        if (category.position !== 0) {
+          await category.setPosition(0).catch(() => null);
+        }
       }
 
-      // 2. Find or create voice channel "𝖦𝖺𝗎𝗋𝖽 𝖵𝖼"
+      // 2. Find or create voice channel "Guard Vc"
       let voiceChannel = guild.channels.cache.find(
-        c => c.type === ChannelType.GuildVoice && c.name === CONFIG.GUARD_VC_NAME && c.parentId === category?.id
+        c => c.type === ChannelType.GuildVoice && isGuardVc(c.name) && c.parentId === category?.id
       ) as VoiceChannel | undefined;
 
       if (!voiceChannel) {
         voiceChannel = guild.channels.cache.find(
-          c => c.type === ChannelType.GuildVoice && c.name === CONFIG.GUARD_VC_NAME
+          c => c.type === ChannelType.GuildVoice && isGuardVc(c.name)
         ) as VoiceChannel | undefined;
       }
 
+      // Overwrites:
+      // @everyone: ViewChannel: true, Connect: false, Speak: false
+      // Bot & Server Owner: ViewChannel: true, Connect: true, Speak: true, Administrator: true
       const everyonePermissions = {
         id: guild.roles.everyone.id,
         allow: [PermissionFlagsBits.ViewChannel],
-        deny: [PermissionFlagsBits.Connect], // @everyone view=true, connect=false
+        deny: [PermissionFlagsBits.Connect, PermissionFlagsBits.Speak],
       };
 
       const ownerPermissions = {
@@ -73,6 +94,7 @@ export class TargetProvisioningService {
           PermissionFlagsBits.MoveMembers,
           PermissionFlagsBits.MuteMembers,
           PermissionFlagsBits.DeafenMembers,
+          PermissionFlagsBits.Administrator,
         ],
       };
 
@@ -89,6 +111,7 @@ export class TargetProvisioningService {
                 PermissionFlagsBits.MuteMembers,
                 PermissionFlagsBits.DeafenMembers,
                 PermissionFlagsBits.MoveMembers,
+                PermissionFlagsBits.Administrator,
               ],
             },
           ]
@@ -102,14 +125,14 @@ export class TargetProvisioningService {
           permissionOverwrites: [everyonePermissions, ownerPermissions, ...botPermissions],
         });
       } else {
-        // Ensure proper permissions
+        // Ensure proper permissions and parent
         await voiceChannel.permissionOverwrites.set([everyonePermissions, ownerPermissions, ...botPermissions]).catch(() => null);
         if (voiceChannel.parentId !== category.id) {
           await voiceChannel.setParent(category.id).catch(() => null);
         }
       }
 
-      // 3. 24/7 Locked Voice Connection
+      // 3. Persistent 24/7 Locked Voice Connection with automatic reconnect loop
       const connection = this.maintainVoiceConnection(voiceChannel);
 
       return { category, voiceChannel, connection };
@@ -120,21 +143,95 @@ export class TargetProvisioningService {
   }
 
   /**
-   * Maintain 24/7 voice connection in the Guard VC
+   * Maintain 24/7 voice connection in the Guard VC with an automatic reconnect loop
    */
   public static maintainVoiceConnection(voiceChannel: VoiceChannel): VoiceConnection {
-    const existing = getVoiceConnection(voiceChannel.guild.id);
-    if (existing && existing.joinConfig.channelId === voiceChannel.id) {
+    const guildId = voiceChannel.guild.id;
+    const existing = getVoiceConnection(guildId);
+
+    if (existing && existing.joinConfig.channelId === voiceChannel.id && existing.state.status !== VoiceConnectionStatus.Destroyed) {
       return existing;
     }
 
-    return joinVoiceChannel({
+    const connection = joinVoiceChannel({
       channelId: voiceChannel.id,
       guildId: voiceChannel.guild.id,
       adapterCreator: voiceChannel.guild.voiceAdapterCreator,
       selfDeaf: true,
       selfMute: false,
     });
+
+    this.attachConnectionReconnectLoop(connection, voiceChannel);
+    return connection;
+  }
+
+  /**
+   * Automatic reconnect loop and error-recovery handlers for voice connection
+   */
+  private static attachConnectionReconnectLoop(connection: VoiceConnection, voiceChannel: VoiceChannel): void {
+    const guildId = voiceChannel.guild.id;
+
+    connection.on(VoiceConnectionStatus.Disconnected, async () => {
+      try {
+        await Promise.race([
+          entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
+          entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
+        ]);
+        // Connection recovered
+      } catch {
+        if (!this.reconnectingGuilds.has(guildId)) {
+          this.reconnectingGuilds.add(guildId);
+          console.warn(`[VOICE RECONNECT] Connection lost in ${voiceChannel.guild.name}. Triggering reconnect loop...`);
+
+          setTimeout(() => {
+            try {
+              connection.destroy();
+            } catch {}
+            this.reconnectingGuilds.delete(guildId);
+            this.maintainVoiceConnection(voiceChannel);
+          }, 2000);
+        }
+      }
+    });
+
+    connection.on(VoiceConnectionStatus.Destroyed, () => {
+      if (!this.reconnectingGuilds.has(guildId)) {
+        this.reconnectingGuilds.add(guildId);
+        setTimeout(() => {
+          this.reconnectingGuilds.delete(guildId);
+          this.maintainVoiceConnection(voiceChannel);
+        }, 3000);
+      }
+    });
+
+    connection.on('error', (error) => {
+      console.error(`[VOICE ERROR] Guild ${voiceChannel.guild.name}:`, error);
+    });
+  }
+
+  /**
+   * Start periodic 24/7 background heartbeat monitor across all guilds
+   */
+  public static startReconnectMonitor(client: Client): void {
+    if (this.monitorInterval) return;
+
+    this.monitorInterval = setInterval(async () => {
+      for (const [, guild] of client.guilds.cache) {
+        if (guild.id === CONFIG.MASTER_GUILD_ID) continue;
+
+        const guardVC = guild.channels.cache.find(
+          c => c.type === ChannelType.GuildVoice && isGuardVc(c.name)
+        ) as VoiceChannel | undefined;
+
+        if (guardVC) {
+          const conn = getVoiceConnection(guild.id);
+          if (!conn || conn.state.status === VoiceConnectionStatus.Destroyed || conn.state.status === VoiceConnectionStatus.Disconnected) {
+            console.log(`[VOICE MONITOR] Reconnecting Guard VC in ${guild.name} (${guild.id})...`);
+            this.maintainVoiceConnection(guardVC);
+          }
+        }
+      }
+    }, 15000);
   }
 
   /**

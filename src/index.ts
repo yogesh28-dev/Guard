@@ -11,6 +11,10 @@ import { onGuildMemberAdd } from './events/guildMemberAdd';
 import { onGuildMemberRemove } from './events/guildMemberRemove';
 import { onInteractionCreate } from './events/interactionCreate';
 import { onMessageCreate } from './events/messageCreate';
+import { onChannelDelete, onChannelCreate, onChannelUpdate } from './events/channelEvents';
+import { onRoleDelete, onRoleCreate, onRoleUpdate } from './events/roleEvents';
+import { onMessageUpdate, onMessageDelete } from './events/messageMutationEvents';
+import { onGuildBanAdd, onWebhooksUpdate, onGuildUpdate } from './events/guildSecurityEvents';
 
 export function createBotClient(): Client {
   const client = new Client({
@@ -22,6 +26,8 @@ export function createBotClient(): Client {
       GatewayIntentBits.GuildMessages,
       GatewayIntentBits.MessageContent,
       GatewayIntentBits.GuildMessageReactions,
+      GatewayIntentBits.GuildWebhooks,
+      GatewayIntentBits.GuildIntegrations,
     ],
     partials: [
       Partials.GuildMember,
@@ -38,6 +44,19 @@ export function createBotClient(): Client {
   client.on('guildMemberRemove', onGuildMemberRemove);
   client.on('interactionCreate', onInteractionCreate);
   client.on('messageCreate', onMessageCreate);
+
+  // Security Engines & Audit Telemetry Events
+  client.on('channelDelete', onChannelDelete);
+  client.on('channelCreate', onChannelCreate);
+  client.on('channelUpdate', onChannelUpdate);
+  client.on('roleDelete', onRoleDelete);
+  client.on('roleCreate', onRoleCreate);
+  client.on('roleUpdate', onRoleUpdate);
+  client.on('messageUpdate', onMessageUpdate);
+  client.on('messageDelete', onMessageDelete);
+  client.on('guildBanAdd', onGuildBanAdd);
+  client.on('webhookUpdate', onWebhooksUpdate);
+  client.on('guildUpdate', onGuildUpdate);
 
   return client;
 }

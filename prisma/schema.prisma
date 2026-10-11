@@ -8,13 +8,74 @@ generator client {
 }
 
 model GuildConfig {
-  guildId           String   @id
-  welcomeChannelId  String?
-  byeChannelId      String?
-  logChannelId      String?
-  antiNukeEnabled   Boolean  @default(true)
-  antiRaidEnabled   Boolean  @default(true)
-  isLockedDown      Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  guildId                  String   @id
+  welcomeChannelId         String?
+  welcomeTemplateUrl       String?
+  welcomeTheme             String?
+  byeChannelId             String?
+  byeTemplateUrl           String?
+  byeTheme                 String?
+  logChannelId             String?
+  auditVcLogChannelId      String?
+  auditServerLogChannelId  String?
+  auditMessageLogChannelId String?
+  antiNukeEnabled          Boolean  @default(true)
+  antiRaidEnabled          Boolean  @default(true)
+  isLockedDown             Boolean  @default(false)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}
+
+model SecurityIncident {
+  id          String   @id @default(uuid())
+  guildId     String
+  type        String
+  actorId     String
+  details     String
+  actionTaken String
+  timestamp   DateTime @default(now())
+}
+
+model ChannelSnapshot {
+  id                   String   @id @default(uuid())
+  guildId              String
+  channelId            String
+  name                 String
+  type                 Int
+  parentId             String?
+  position             Int
+  topic                String?
+  permissionOverwrites String   // Serialized JSON
+  updatedAt            DateTime @updatedAt
+
+  @@unique([guildId, channelId])
+}
+
+model RoleSnapshot {
+  id          String   @id @default(uuid())
+  guildId     String
+  roleId      String
+  name        String
+  color       Int
+  hoist       Boolean
+  position    Int
+  permissions String
+  mentionable Boolean
+  updatedAt   DateTime @updatedAt
+
+  @@unique([guildId, roleId])
+}
+
+model DailyVitals {
+  id                 String   @id @default(uuid())
+  guildId            String
+  date               String   // YYYY-MM-DD
+  memberCount        Int
+  joins24h           Int      @default(0)
+  leaves24h          Int      @default(0)
+  threatsBlocked24h  Int      @default(0)
+  healthScore        Float    @default(100.0)
+  createdAt          DateTime @default(now())
+
+  @@unique([guildId, date])
 }

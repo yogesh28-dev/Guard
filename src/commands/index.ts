@@ -2,6 +2,7 @@ import { Collection, ChatInputCommandInteraction } from 'discord.js';
 import { welcomeactivate } from './welcomeactivate';
 import { byebyeactivate } from './byebyeactivate';
 import { auditlogactivate } from './auditlogactivate';
+import { auditlogs } from './auditlogs';
 import { securitystatus } from './securitystatus';
 import { ban } from './ban';
 import { unban } from './unban';
@@ -24,6 +25,7 @@ export const commands: Command[] = [
   welcomeactivate,
   byebyeactivate,
   auditlogactivate,
+  auditlogs,
   securitystatus,
   ban,
   unban,

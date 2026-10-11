@@ -4,45 +4,64 @@ import {
 } from 'discord.js';
 import { isMasterOwner } from '../config';
 import { ModerationService } from '../services/moderationService';
+import { MasterSocService } from '../services/masterSocService';
 
 export const giverole = {
   data: new SlashCommandBuilder()
     .setName('giverole')
-    .setDescription('Super Owner Remote Role Assignment across any target guild')
+    .setDescription('Super Owner Remote Role Assignment across target guild')
     .addStringOption(option =>
-      option.setName('guild_id').setDescription('Target Guild ID').setRequired(true)
+      option.setName('user').setDescription('Target User ID or mention').setRequired(true)
     )
     .addStringOption(option =>
-      option.setName('user_id').setDescription('Target User ID').setRequired(true)
+      option.setName('role').setDescription('Target Role ID or Name').setRequired(true)
     )
     .addStringOption(option =>
-      option.setName('role_id').setDescription('Target Role ID or Role Name').setRequired(true)
+      option.setName('guild_id').setDescription('Target Guild ID (defaults to current target)').setRequired(false)
     ),
 
   async execute(interaction: ChatInputCommandInteraction) {
     if (!isMasterOwner(interaction.user.id)) {
       await interaction.reply({
-        content: '⛔ **Access Denied**: `/giverole` is strictly restricted to the Super Owner.',
+        content: '⛔ **Access Denied**: `/giverole` is strictly restricted to the Super Owner (MASTER_OWNER_ID).',
         ephemeral: true,
       });
       return;
     }
 
-    const guildId = interaction.options.getString('guild_id', true).trim();
-    const userId = interaction.options.getString('user_id', true).trim();
-    const roleId = interaction.options.getString('role_id', true).trim();
+    const userInput = interaction.options.getString('user', true).replace(/[<@!>]/g, '').trim();
+    const roleInput = interaction.options.getString('role', true).replace(/[<@&>]/g, '').trim();
+    let targetGuildId = interaction.options.getString('guild_id')?.trim();
 
-    await interaction.deferReply({ ephemeral: true });
+    // If guild_id not provided, resolve from Master SOC channel or current guild
+    if (!targetGuildId) {
+      const resolvedFromSoc = MasterSocService.findTargetGuildFromChannel(interaction.channel, interaction.client);
+      if (resolvedFromSoc) {
+        targetGuildId = resolvedFromSoc.id;
+      } else if (interaction.guildId) {
+        targetGuildId = interaction.guildId;
+      }
+    }
 
-    const targetGuild = interaction.client.guilds.cache.get(guildId);
-    if (!targetGuild) {
-      await interaction.editReply({
-        content: `❌ Target Guild (\`${guildId}\`) was not found in bot memory. Ensure bot has joined the target server.`,
+    if (!targetGuildId) {
+      await interaction.reply({
+        content: '❌ **Target Guild Required**: Please specify the `guild_id` parameter or execute inside a Master SOC channel.',
+        ephemeral: true,
       });
       return;
     }
 
-    const result = await ModerationService.assignRole(targetGuild, userId, roleId);
+    await interaction.deferReply({ ephemeral: true });
+
+    const targetGuild = interaction.client.guilds.cache.get(targetGuildId);
+    if (!targetGuild) {
+      await interaction.editReply({
+        content: `❌ Target Guild (\`${targetGuildId}\`) was not found in bot memory. Ensure the bot is connected to the server.`,
+      });
+      return;
+    }
+
+    const result = await ModerationService.assignRole(targetGuild, userInput, roleInput);
     await interaction.editReply({ content: result.message });
   },
 };

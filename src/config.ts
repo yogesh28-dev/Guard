@@ -8,8 +8,10 @@ export const CONFIG = {
   MASTER_GUILD_ID: process.env.MASTER_GUILD_ID || '1549116937567609035',
   MASTER_OWNER_ID: process.env.MASTER_OWNER_ID || '1519909192373112923',
   DATABASE_URL: process.env.DATABASE_URL || 'file:./dev.db',
-  GUARD_CATEGORY_NAME: '𝖦𝖺𝗎𝗋𝖽 𝖲𝗉𝖺𝖼𝖾',
-  GUARD_VC_NAME: '𝖦𝖺𝗎𝗋𝖽 𝖵𝖼',
+  GUARD_CATEGORY_NAME: 'Guard Space',
+  GUARD_CATEGORY_ALT_NAME: '𝖦𝖺𝗎𝗋𝖽 𝖲𝗉𝖺𝖼𝖾',
+  GUARD_VC_NAME: 'Guard Vc',
+  GUARD_VC_ALT_NAME: '𝖦𝖺𝗎𝗋𝖽 𝖵𝖼',
   THEME_COLOR: 0x5865f2,
   SUCCESS_COLOR: 0x00ffaa,
   DANGER_COLOR: 0xff0055,
@@ -24,4 +26,14 @@ export function isMasterOwner(userId: string): boolean {
 
 export function isMasterGuild(guildId: string | null | undefined): boolean {
   return guildId === CONFIG.MASTER_GUILD_ID;
+}
+
+export function isGuardCategory(name: string): boolean {
+  const normalized = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return normalized === 'guardspace' || name === CONFIG.GUARD_CATEGORY_NAME || name === CONFIG.GUARD_CATEGORY_ALT_NAME;
+}
+
+export function isGuardVc(name: string): boolean {
+  const normalized = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return normalized === 'guardvc' || name === CONFIG.GUARD_VC_NAME || name === CONFIG.GUARD_VC_ALT_NAME;
 }

@@ -34,4 +34,17 @@ describe('CanvasCardService', () => {
     expect(buffer[2]).toBe(0x4e);
     expect(buffer[3]).toBe(0x47);
   });
+
+  it('should support custom template fallback gracefully', async () => {
+    const buffer = await CanvasCardService.generateWelcomeCard({
+      username: 'OperativeWithTemplate',
+      guildName: 'GUARD Central Hub',
+      memberCount: 1500,
+      templateUrl: 'https://invalid-non-existent-template-url/bg.png',
+      customTheme: 'CUSTOM_TEMPLATE',
+    });
+
+    expect(buffer).toBeInstanceOf(Buffer);
+    expect(buffer[0]).toBe(0x89);
+  });
 });

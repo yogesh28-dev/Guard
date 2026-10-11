@@ -6,11 +6,13 @@ export interface CardOptions {
   avatarUrl?: string | null;
   guildName: string;
   memberCount: number;
+  templateUrl?: string | null;
+  customTheme?: string | null;
 }
 
 export class CanvasCardService {
   /**
-   * Generates an 800x400 cyberpunk dark themed Welcome Card
+   * Generates an 800x400 cyberpunk dark themed Welcome Card with optional dynamic template image
    */
   public static async generateWelcomeCard(options: CardOptions): Promise<Buffer> {
     const width = 800;
@@ -18,29 +20,47 @@ export class CanvasCardService {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // 1. Dark Cyberpunk Background
-    const bgGradient = ctx.createLinearGradient(0, 0, width, height);
-    bgGradient.addColorStop(0, '#090a10');
-    bgGradient.addColorStop(0.5, '#0e111a');
-    bgGradient.addColorStop(1, '#06070a');
-    ctx.fillStyle = bgGradient;
-    ctx.fillRect(0, 0, width, height);
+    let templateLoaded = false;
+    if (options.templateUrl) {
+      try {
+        const bgImg = await loadImage(options.templateUrl);
+        // Draw template image cover
+        ctx.drawImage(bgImg, 0, 0, width, height);
 
-    // 2. Cyberpunk Grid Overlay
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.05)';
-    ctx.lineWidth = 1;
-    const gridSize = 30;
-    for (let x = 0; x < width; x += gridSize) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-      ctx.stroke();
+        // Apply dark cyber overlay for readability
+        ctx.fillStyle = 'rgba(10, 11, 16, 0.72)';
+        ctx.fillRect(0, 0, width, height);
+        templateLoaded = true;
+      } catch {
+        templateLoaded = false;
+      }
     }
-    for (let y = 0; y < height; y += gridSize) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
+
+    if (!templateLoaded) {
+      // 1. Dark Cyberpunk Default Gradient Background
+      const bgGradient = ctx.createLinearGradient(0, 0, width, height);
+      bgGradient.addColorStop(0, '#090a10');
+      bgGradient.addColorStop(0.5, '#0e111a');
+      bgGradient.addColorStop(1, '#06070a');
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, width, height);
+
+      // 2. Cyberpunk Grid Overlay
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.05)';
+      ctx.lineWidth = 1;
+      const gridSize = 30;
+      for (let x = 0; x < width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
     }
 
     // 3. Cyber Neon Corner Accents & Card Border
@@ -70,7 +90,7 @@ export class CanvasCardService {
     ctx.restore();
 
     // 4. Header Bar with Guild Info
-    ctx.fillStyle = 'rgba(0, 240, 255, 0.1)';
+    ctx.fillStyle = 'rgba(0, 240, 255, 0.12)';
     ctx.fillRect(40, 35, width - 80, 30);
     ctx.fillStyle = '#00f0ff';
     ctx.font = 'bold 14px sans-serif';
@@ -126,7 +146,6 @@ export class CanvasCardService {
     }
 
     if (!avatarLoaded) {
-      // Default Cyberpunk Avatar Placeholder
       ctx.fillStyle = '#1b1d2e';
       ctx.fillRect(
         avatarX - avatarRadius,
@@ -145,7 +164,6 @@ export class CanvasCardService {
     // 6. Typography & Text Elements
     ctx.textAlign = 'left';
 
-    // Sub-heading
     ctx.fillStyle = '#ff007f';
     ctx.font = 'bold 16px sans-serif';
     ctx.fillText('IDENTIFICATION VERIFIED', 260, 150);
@@ -193,7 +211,7 @@ export class CanvasCardService {
   }
 
   /**
-   * Generates an 800x400 twilight themed Goodbye Card
+   * Generates an 800x400 twilight themed Goodbye Card with optional dynamic template image
    */
   public static async generateGoodbyeCard(options: CardOptions): Promise<Buffer> {
     const width = 800;
@@ -201,34 +219,51 @@ export class CanvasCardService {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // 1. Twilight Gradient Background
-    const bgGradient = ctx.createLinearGradient(0, 0, width, height);
-    bgGradient.addColorStop(0, '#0c0714');
-    bgGradient.addColorStop(0.4, '#1b0d2b');
-    bgGradient.addColorStop(0.8, '#260f38');
-    bgGradient.addColorStop(1, '#0e0517');
-    ctx.fillStyle = bgGradient;
-    ctx.fillRect(0, 0, width, height);
+    let templateLoaded = false;
+    if (options.templateUrl) {
+      try {
+        const bgImg = await loadImage(options.templateUrl);
+        ctx.drawImage(bgImg, 0, 0, width, height);
 
-    // 2. Twilight Stars / Particles
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    const stars = [
-      [60, 80], [120, 50], [200, 95], [310, 45], [450, 70],
-      [580, 55], [680, 90], [740, 40], [150, 330], [670, 320],
-      [710, 270], [380, 340], [520, 350], [90, 290]
-    ];
-    for (const [sx, sy] of stars) {
-      ctx.beginPath();
-      ctx.arc(sx, sy, Math.random() * 1.5 + 0.8, 0, Math.PI * 2);
-      ctx.fill();
+        // Apply dark twilight overlay for readability
+        ctx.fillStyle = 'rgba(16, 8, 26, 0.75)';
+        ctx.fillRect(0, 0, width, height);
+        templateLoaded = true;
+      } catch {
+        templateLoaded = false;
+      }
     }
 
-    // 3. Twilight Horizon Glow
-    const horizonGlow = ctx.createRadialGradient(width / 2, height, 50, width / 2, height, 400);
-    horizonGlow.addColorStop(0, 'rgba(224, 86, 136, 0.25)');
-    horizonGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = horizonGlow;
-    ctx.fillRect(0, 0, width, height);
+    if (!templateLoaded) {
+      // 1. Twilight Gradient Background
+      const bgGradient = ctx.createLinearGradient(0, 0, width, height);
+      bgGradient.addColorStop(0, '#0c0714');
+      bgGradient.addColorStop(0.4, '#1b0d2b');
+      bgGradient.addColorStop(0.8, '#260f38');
+      bgGradient.addColorStop(1, '#0e0517');
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, width, height);
+
+      // 2. Twilight Stars / Particles
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      const stars = [
+        [60, 80], [120, 50], [200, 95], [310, 45], [450, 70],
+        [580, 55], [680, 90], [740, 40], [150, 330], [670, 320],
+        [710, 270], [380, 340], [520, 350], [90, 290]
+      ];
+      for (const [sx, sy] of stars) {
+        ctx.beginPath();
+        ctx.arc(sx, sy, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 3. Twilight Horizon Glow
+      const horizonGlow = ctx.createRadialGradient(width / 2, height, 50, width / 2, height, 400);
+      horizonGlow.addColorStop(0, 'rgba(224, 86, 136, 0.25)');
+      horizonGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = horizonGlow;
+      ctx.fillRect(0, 0, width, height);
+    }
 
     // 4. Subtle Border
     ctx.save();

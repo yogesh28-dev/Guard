@@ -2,15 +2,19 @@ import { GuildMember, TextChannel, AttachmentBuilder, EmbedBuilder, PartialGuild
 import { getOrCreateGuildConfig } from '../db';
 import { CanvasCardService } from '../services/canvasCardService';
 import { MasterSocService } from '../services/masterSocService';
+import { AntiNukeService } from '../services/antiNukeService';
 import { CONFIG } from '../config';
 
 export async function onGuildMemberRemove(member: GuildMember | PartialGuildMember): Promise<void> {
   const guild = member.guild;
 
   try {
+    // 1. Anti-Nuke check for mass kicks / evictions
+    await AntiNukeService.handleMemberRemoveOrBan(guild, 'KICK');
+
     const config = await getOrCreateGuildConfig(guild.id);
 
-    // 1. Dispatch Goodbye Card if byeChannelId is configured
+    // 2. Dispatch Goodbye Card if byeChannelId is configured
     if (config.byeChannelId) {
       const byeChannel = guild.channels.cache.get(config.byeChannelId) as TextChannel | undefined;
       if (byeChannel) {
@@ -21,6 +25,8 @@ export async function onGuildMemberRemove(member: GuildMember | PartialGuildMemb
           avatarUrl,
           guildName: guild.name,
           memberCount: guild.memberCount,
+          templateUrl: config.byeTemplateUrl,
+          customTheme: config.byeTheme,
         });
 
         const attachment = new AttachmentBuilder(cardBuffer, { name: 'goodbye-card.png' });
@@ -31,7 +37,7 @@ export async function onGuildMemberRemove(member: GuildMember | PartialGuildMemb
       }
     }
 
-    // 2. Dispatch to Master SOC Audit Log
+    // 3. Dispatch to Master SOC Audit Telemetry
     const auditEmbed = new EmbedBuilder()
       .setTitle('🚪 MEMBER DEPARTED')
       .setColor(CONFIG.DANGER_COLOR)
@@ -42,7 +48,7 @@ export async function onGuildMemberRemove(member: GuildMember | PartialGuildMemb
       .setThumbnail(member.user?.displayAvatarURL({ size: 128 }) || null)
       .setTimestamp();
 
-    await MasterSocService.logAudit(guild.client, guild.id, auditEmbed);
+    await MasterSocService.logAuditTelemetry(guild.client, guild.id, 'MEMBER_LOGS', auditEmbed);
   } catch (error) {
     console.error(`[MEMBER REMOVE ERROR] Guild ${guild.id}:`, error);
   }

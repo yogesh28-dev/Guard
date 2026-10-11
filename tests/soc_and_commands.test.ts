@@ -21,11 +21,12 @@ describe('Master SOC & Slash Commands', () => {
     expect(resolved?.id).toBe('888777666555');
   });
 
-  it('should include all required 15 slash commands in the registry', () => {
+  it('should include all required 16 slash commands in the registry', () => {
     const expectedCommands = [
       'welcomeactivate',
       'byebyeactivate',
       'auditlogactivate',
+      'auditlogs',
       'securitystatus',
       'ban',
       'unban',
@@ -40,9 +41,34 @@ describe('Master SOC & Slash Commands', () => {
       'giverole',
     ];
 
-    expect(commands.length).toBe(15);
+    expect(commands.length).toBe(16);
     for (const name of expectedCommands) {
       expect(commandCollection.has(name)).toBe(true);
     }
+  });
+
+  it('should generate comprehensive 24h analytical status embed', async () => {
+    const mockGuild = {
+      id: '888777666555',
+      name: 'Alpha Defense Grid',
+      memberCount: 500,
+      premiumTier: 2,
+      premiumSubscriptionCount: 7,
+      roles: { cache: new Map([['r1', {}], ['r2', {}]]) },
+      channels: {
+        cache: new Map([
+          ['c1', { type: 0 }],
+          ['c2', { type: 2 }],
+        ]),
+      },
+      fetchOwner: async () => ({
+        id: '1519909192373112923',
+        user: { tag: 'Commander#0001' },
+      }),
+    } as any;
+
+    const embed = await MasterSocService.generateServerStatusEmbed(mockGuild);
+    expect(embed.data.title).toContain('24H SOC ANALYTICAL BREAKDOWN');
+    expect(embed.data.fields?.length).toBeGreaterThanOrEqual(6);
   });
 });
