@@ -33,8 +33,9 @@ export async function onGuildMemberAdd(member: GuildMember): Promise<void> {
         });
 
         const attachment = new AttachmentBuilder(cardBuffer, { name: 'welcome-card.png' });
+        const welcomeContent = `Hey ${member}, welcome to${member.guild.name}! 🎉\nGlad to have you here! \nEnjoy your stay! You're member #${member.guild.memberCount} ✨`;
         await welcomeChannel.send({
-          content: `Welcome to **${guild.name}**, <@${member.id}>! ⚡`,
+          content: welcomeContent,
           files: [attachment],
         }).catch(err => console.error(`[WELCOME DISPATCH ERROR] Channel ${welcomeChannel.id}:`, err));
       }

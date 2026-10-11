@@ -30,8 +30,9 @@ export async function onGuildMemberRemove(member: GuildMember | PartialGuildMemb
         });
 
         const attachment = new AttachmentBuilder(cardBuffer, { name: 'goodbye-card.png' });
+        const goodbyeContent = `Goodbye ${member.user?.username ?? member.displayName}, thanks for being part of ${member.guild.name}! 👋\nSad to see you go!\nWish you the best! We're down to ${member.guild.memberCount} members ✨`;
         await byeChannel.send({
-          content: `**${member.user?.username || 'A member'}** has left the server. 🌌`,
+          content: goodbyeContent,
           files: [attachment],
         }).catch(err => console.error(`[BYE DISPATCH ERROR] Channel ${byeChannel.id}:`, err));
       }
