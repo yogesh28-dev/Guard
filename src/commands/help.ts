@@ -67,12 +67,14 @@ export const help = {
         name: '👑 [CLASSIFIED] SUPER OWNER & MASTER SOC DIRECTORY',
         value:
           '**Master SOC Hierarchy (Guild: `' + CONFIG.MASTER_GUILD_ID + '`):**\n' +
+          '• Dedicated Telemetry Channel: `#bot-status` (Hourly System & Fleet Pulse)\n' +
           '• Category `🌐・[Guild Name]` with 4 dedicated private channels:\n' +
-          '  `#panel-[last4]`, `#audit-logs`, `#bot-log`, `#command` (CLI Terminal)\n' +
-          '• Remote Role Assignment: `/giverole <guild_id> <user_id> <role_id>`\n' +
+          '  `#server-status`, `#audit-logs`, `#bot-log`, `#command` (CLI Terminal)\n' +
+          '• Force Multi-Guild Sync: `/syncall`\n' +
+          '• Remote Role Assignment: `/giverole user:<userId> role:<roleId>`\n' +
           '• **CLI Terminal Commands** (`#command`):\n' +
           '  `serverclone`, `lockdown`, `unlockdown`, `kick`, `ban`, `unban`, `warn`,\n' +
-          '  `timeout`, `purge`, `security`, `serverinfo`, `userinfo`, `giverole`\n' +
+          '  `timeout`, `purge`, `security`, `serverinfo`, `userinfo`, `giverole`, `syncall`\n' +
           '• **Web SOC Security Dashboard**: `https://guard-soc.internal/dashboard` (Root Token: `MASTER_KEY_AUTH`)',
         inline: false,
       });

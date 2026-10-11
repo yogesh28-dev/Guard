@@ -60,7 +60,17 @@ export class MasterCommandExecutor {
             `  • security [on|off]        - Toggle Anti-Nuke and Anti-Raid shields\n` +
             `  • serverinfo               - Full intelligence report on target\n` +
             `  • userinfo <user>          - Dossier on user in target server\n` +
-            `  • giverole <user> <role>   - Grant or revoke role in target server`;
+            `  • giverole <user> <role>   - Grant or revoke role in target server\n` +
+            `  • syncall                  - Force re-fetch and reconcile all guilds & telemetry`;
+          break;
+        }
+
+        case 'syncall': {
+          const res = await MasterSocService.reconcileAllGuilds(client);
+          const { BotStatusMonitorService } = await import('./botStatusMonitorService');
+          await BotStatusMonitorService.dispatchHourlyReport(client).catch(() => null);
+          isSuccess = true;
+          resultOutput = `Multi-Guild Sync Complete: ${res.syncedGuilds} guilds provisioned, ${res.failedGuilds} failed.\nTelemetry dispatched to #bot-status.`;
           break;
         }
 

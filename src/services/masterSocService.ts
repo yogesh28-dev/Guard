@@ -20,27 +20,99 @@ export class MasterSocService {
   private static cronTask: ScheduledTask | null = null;
   private static lastPing = 0;
 
+  private static sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   /**
-   * Reconcile all connected target guilds into the Master SOC
+   * Reconcile all connected target guilds into the Master SOC with 1000ms rate-limit throttle
    */
-  public static async reconcileAllGuilds(client: Client): Promise<void> {
-    const masterGuild = client.guilds.cache.get(CONFIG.MASTER_GUILD_ID);
-    if (!masterGuild) {
-      console.warn(`[MASTER SOC] Master Guild (${CONFIG.MASTER_GUILD_ID}) not found in client cache.`);
-      return;
+  public static async reconcileAllGuilds(client: Client): Promise<{
+    totalGuilds: number;
+    syncedGuilds: number;
+    failedGuilds: number;
+  }> {
+    console.log('[MASTER SOC] Fetching all connected guilds via client.guilds.fetch()...');
+    
+    // 1. Fetch OAuth guild list and resolve all full guilds
+    let fetchedList: any = null;
+    try {
+      fetchedList = await client.guilds.fetch();
+    } catch (err) {
+      console.warn('[MASTER SOC] client.guilds.fetch() error, falling back to cache:', err);
     }
 
-    console.log(`[MASTER SOC] Initiating reconciliation across ${client.guilds.cache.size} guilds...`);
-    for (const [, targetGuild] of client.guilds.cache) {
-      if (targetGuild.id === masterGuild.id) continue;
-      await this.provisionGuildSoc(masterGuild, targetGuild).catch(err => {
-        console.error(`[MASTER SOC] Failed to reconcile guild ${targetGuild.name} (${targetGuild.id}):`, err);
-      });
+    const guildIds: string[] = [];
+    if (fetchedList && fetchedList.size > 0) {
+      for (const [id] of fetchedList) {
+        guildIds.push(id);
+      }
+    } else {
+      for (const [id] of client.guilds.cache) {
+        guildIds.push(id);
+      }
+    }
+
+    let masterGuild = client.guilds.cache.get(CONFIG.MASTER_GUILD_ID);
+    if (!masterGuild) {
+      masterGuild = await client.guilds.fetch(CONFIG.MASTER_GUILD_ID).catch(() => null) as Guild;
+    }
+
+    if (!masterGuild) {
+      console.warn(`[MASTER SOC] Master Guild (${CONFIG.MASTER_GUILD_ID}) could not be resolved.`);
+      return { totalGuilds: guildIds.length, syncedGuilds: 0, failedGuilds: guildIds.length };
+    }
+
+    // 2. Ensure dedicated #bot-status channel in Master Guild
+    const { BotStatusMonitorService } = await import('./botStatusMonitorService');
+    await BotStatusMonitorService.ensureBotStatusChannel(masterGuild);
+
+    let synced = 0;
+    let failed = 0;
+
+    console.log(`[MASTER SOC] Initiating throttled reconciliation across ${guildIds.length} guilds...`);
+    const { TargetProvisioningService } = await import('./targetProvisioningService');
+    const { AntiNukeService } = await import('./antiNukeService');
+
+    for (const gid of guildIds) {
+      if (gid === masterGuild.id) continue;
+
+      try {
+        let targetGuild = client.guilds.cache.get(gid);
+        if (!targetGuild) {
+          targetGuild = await client.guilds.fetch(gid).catch(() => null) as Guild;
+        }
+
+        if (!targetGuild) {
+          failed++;
+          continue;
+        }
+
+        // A. Ensure "Guard Space" and "Guard Vc" with 24/7 locked audio
+        await TargetProvisioningService.provisionGuild(targetGuild);
+        await this.sleep(1000); // 1000ms throttle to prevent 429 rate limit skipping
+
+        // B. Snapshot channels & roles
+        await AntiNukeService.snapshotGuild(targetGuild);
+
+        // C. Provision Master SOC category & 4 private channels
+        await this.provisionGuildSoc(masterGuild, targetGuild);
+        await this.sleep(1000); // 1000ms throttle between guild provisioning
+
+        synced++;
+      } catch (err) {
+        console.error(`[MASTER SOC] Error reconciling guild ${gid}:`, err);
+        failed++;
+      }
     }
 
     // Schedule 04:00 AM IST daily analytical breakdown (22:30 UTC)
     this.startDailyCronJob(client);
-    console.log(`[MASTER SOC] Reconciliation completed.`);
+    // Schedule top-of-the-hour #bot-status cron
+    BotStatusMonitorService.startHourlyCron(client);
+
+    console.log(`[MASTER SOC] Reconciliation completed: ${synced} synced, ${failed} failed.`);
+    return { totalGuilds: guildIds.length, syncedGuilds: synced, failedGuilds: failed };
   }
 
   /**
@@ -101,6 +173,7 @@ export class MasterSocService {
           type: ChannelType.GuildCategory,
           permissionOverwrites: privateOverwrites,
         });
+        await this.sleep(1000); // Throttle
       }
 
       // Helper to ensure channel
@@ -117,6 +190,7 @@ export class MasterSocService {
             topic,
             permissionOverwrites: privateOverwrites,
           });
+          await this.sleep(1000); // Throttle
         } else {
           if (channel.name !== name) {
             await channel.setName(name).catch(() => null);

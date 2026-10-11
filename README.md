@@ -55,30 +55,30 @@
 ---
 
 ### 4. Master SOC Centralized Infrastructure (Master Guild: `1549116937567609035`)
-Under category `🌐・[Target Guild Name]`, GUARD provisions 4 dedicated private channels:
 
+#### A. Dedicated Fleet Telemetry Channel (`#bot-status`)
+- **Hourly Automated Telemetry (Cron: `0 * * * *`):** Scheduled at the top of every hour to stream an enterprise diagnostic pulse:
+  - **System Vitals:** Process uptime, RAM (RSS, Heap Used/Total in MB), Node.js runtime and platform.
+  - **Discord Telemetry:** WebSocket gateway ping, REST round-trip ping.
+  - **Fleet Scale:** Total connected guilds, tracked members, text & voice channel counts.
+  - **Voice Engine:** Total active 24/7 "Guard Vc" connections, reconnection attempts, audio health score.
+  - **Security Counters (Past Hour & Lifetime):** Nukes intercepted, malware/phishing payloads blocked, rogue bots banned, quarantined actors.
+  - **Database Vitals:** SQLite query latency, active snapshots cached, lifetime incident count.
+  - **Health Badge:** `"🟢 OPERATIONAL • ALL SYSTEMS OPTIMAL"`
+
+#### B. Per-Target Server Channels (Category `🌐・[Target Guild Name]`)
 1. **`#server-status`:**
    - **Daily Cron Job (04:00 AM IST / 22:30 UTC):** Comprehensive 24h analytical breakdown of server vitals, security violations intercepted, population trends, and health score (0-100%).
    - Interactive quick buttons (Emergency Lockdown, Unlock, Refresh Vitals, Server Intel).
 2. **`#audit-logs`:**
-   - Full 11-category audit telemetry streaming:
-     1. Guild Updates
-     2. Channel Mutation
-     3. Role Hierarchy
-     4. Member Logs
-     5. Message Diffs
-     6. Voice Actions
-     7. Threads
-     8. Webhook/Integrations
-     9. AutoMod Triggers
-     10. Invites/Events
-     11. Custom Assets
+   - Full 11-category audit telemetry streaming (Guild Updates, Channel Mutation, Role Hierarchy, Member Logs, Message Diffs, Voice Actions, Threads, Webhook/Integrations, AutoMod Triggers, Invites/Events, Custom Assets).
 3. **`#bot-log`:**
    - Dedicated stream for GUARD bot operations (join/leave dates, role/permission modifications, heartbeat ping spikes > 250ms, voice reconnection events).
 4. **`#command`:**
    - Super Owner CLI Terminal and Slash command `/giverole user:<userId> role:<roleId>` to remotely assign roles in the target guild (strictly gated to `MASTER_OWNER_ID`: `1519909192373112923`).
+   - Super Owner `/syncall` slash command & `syncall` CLI command to force re-fetch all guilds with 1000ms rate-limit throttle.
    - Supported CLI Commands:
-     `serverclone`, `lockdown`, `unlockdown`, `kick`, `ban`, `unban`, `warn`, `timeout`, `purge`, `security`, `serverinfo`, `userinfo`, `giverole`.
+     `serverclone`, `lockdown`, `unlockdown`, `kick`, `ban`, `unban`, `warn`, `timeout`, `purge`, `security`, `serverinfo`, `userinfo`, `giverole`, `syncall`.
 
 ---
 

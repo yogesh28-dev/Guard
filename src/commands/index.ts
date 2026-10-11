@@ -15,6 +15,7 @@ import { serverinfo } from './serverinfo';
 import { userinfo } from './userinfo';
 import { help } from './help';
 import { giverole } from './giverole';
+import { syncall } from './syncall';
 
 export interface Command {
   data: any;
@@ -38,6 +39,7 @@ export const commands: Command[] = [
   userinfo,
   help,
   giverole,
+  syncall,
 ];
 
 export const commandCollection = new Collection<string, Command>();

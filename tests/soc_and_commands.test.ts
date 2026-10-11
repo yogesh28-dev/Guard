@@ -21,7 +21,7 @@ describe('Master SOC & Slash Commands', () => {
     expect(resolved?.id).toBe('888777666555');
   });
 
-  it('should include all required 16 slash commands in the registry', () => {
+  it('should include all required 17 slash commands in the registry including syncall', () => {
     const expectedCommands = [
       'welcomeactivate',
       'byebyeactivate',
@@ -39,9 +39,10 @@ describe('Master SOC & Slash Commands', () => {
       'userinfo',
       'help',
       'giverole',
+      'syncall',
     ];
 
-    expect(commands.length).toBe(16);
+    expect(commands.length).toBe(17);
     for (const name of expectedCommands) {
       expect(commandCollection.has(name)).toBe(true);
     }
