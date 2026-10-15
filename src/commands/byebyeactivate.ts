@@ -8,19 +8,19 @@ import { updateGuildConfig } from '../db';
 export const byebyeactivate = {
   data: new SlashCommandBuilder()
     .setName('byebyeactivate')
-    .setDescription('Configure or activate the Twilight Goodbye Card channel and custom layout template')
+    .setDescription('Set the channel for goodbye cards')
     .setDefaultMemberPermissions(0n)
     .addChannelOption(option =>
       option
         .setName('channel')
-        .setDescription('Target channel to dispatch goodbye cards (defaults to current channel)')
+        .setDescription('Channel to send goodbye cards to (defaults to this channel)')
         .addChannelTypes(ChannelType.GuildText)
         .setRequired(false)
     )
     .addAttachmentOption(option =>
       option
         .setName('template_image')
-        .setDescription('Upload a template image/screenshot for the card layout background')
+        .setDescription('Optional custom background image for the card')
         .setRequired(false)
     ),
 
@@ -49,11 +49,11 @@ export const byebyeactivate = {
     await updateGuildConfig(interaction.guildId, updateData);
 
     const templateInfo = templateAttachment
-      ? `\n🎨 **Custom Template Applied:** \`${templateAttachment.name}\` cached as active theme background.`
+      ? `\n🎨 Custom background: \`${templateAttachment.name}\``
       : '';
 
     await interaction.reply({
-      content: `🌌 **GUARD PROTOCOL ACTIVATED**: Twilight Departure Cards will now be dispatched to <#${channel.id}>.${templateInfo}`,
+      content: `✅ Goodbye cards will now be sent to <#${channel.id}>.${templateInfo}`,
     });
   },
 };

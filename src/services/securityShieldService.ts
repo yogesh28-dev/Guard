@@ -119,14 +119,13 @@ export class SecurityShieldService {
     }
 
     const trapEmbed = new EmbedBuilder()
-      .setTitle('⚠️ AUTOMATED HONEYPOT TRAP — DO NOT SEND MESSAGES HERE')
+      .setTitle('🔒 Automated Trap — Do Not Send Messages Here')
       .setColor(CONFIG.DANGER_COLOR)
       .setDescription(
-        '⚠️ **AUTOMATED HONEYPOT TRAP — DO NOT SEND MESSAGES HERE.**\n\n' +
-        'Any message posted in this channel will result in an instant automated permanent ban across the GUARD network.\n' +
-        'This channel exists purely to intercept automated selfbots, spam scripts, and raid injectors.'
+        '⚠️ **DO NOT SEND MESSAGES IN THIS CHANNEL.**\n\n' +
+        'This channel is an automated trap for spammers and raid bots. Sending any message here will result in an **instant permanent ban** from the server.'
       )
-      .setFooter({ text: 'GUARD Enterprise Threat Defense Grid' })
+      .setFooter({ text: 'GUARD Security • Automated Trap' })
       .setTimestamp();
 
     if (typeof channel.send === 'function') {
@@ -539,14 +538,14 @@ export class SecurityShieldService {
         }
 
         const alertEmbed = new EmbedBuilder()
-          .setTitle('🛡️ GUARD THREAT SHIELD // PAYLOAD INTERCEPTED')
+          .setTitle('🛡️ Harmful Content Blocked')
           .setColor(CONFIG.DANGER_COLOR)
           .setDescription(
-            `⚠️ Security risk detected from <@${message.author.id}>.\n` +
-            `**Classification:** \`${violationType}\`\n` +
-            `**Action:** Message deleted & sender muted for 1 hour.`
+            `A dangerous link or attachment was detected from <@${message.author.id}>.\n` +
+            `• **Violation:** \`${violationType}\`\n` +
+            `• **Action Taken:** Message deleted and user muted for 1 hour.`
           )
-          .setFooter({ text: 'GUARD Enterprise Defensive Engine' })
+          .setFooter({ text: 'GUARD Security' })
           .setTimestamp();
 
         if ('send' in message.channel) {

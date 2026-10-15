@@ -7,10 +7,10 @@ import { ModerationService } from '../services/moderationService';
 export const userinfo = {
   data: new SlashCommandBuilder()
     .setName('userinfo')
-    .setDescription('Display security dossier and profile for a user')
+    .setDescription('View profile info, join date, and roles for a member')
     .setDefaultMemberPermissions(0n)
     .addUserOption(option =>
-      option.setName('user').setDescription('Target user to inspect (defaults to yourself)').setRequired(false)
+      option.setName('user').setDescription('The member to view (defaults to yourself)').setRequired(false)
     ),
 
   async execute(interaction: ChatInputCommandInteraction) {

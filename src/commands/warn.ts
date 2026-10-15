@@ -9,13 +9,13 @@ import { CONFIG } from '../config';
 export const warn = {
   data: new SlashCommandBuilder()
     .setName('warn')
-    .setDescription('Issue a formal security warning to a member')
+    .setDescription('Warn a member for breaking rules')
     .setDefaultMemberPermissions(0n)
     .addUserOption(option =>
       option.setName('user').setDescription('The member to warn').setRequired(true)
     )
     .addStringOption(option =>
-      option.setName('reason').setDescription('Reason for the security warning').setRequired(true)
+      option.setName('reason').setDescription('Reason for the warning').setRequired(true)
     ),
 
   async execute(interaction: ChatInputCommandInteraction) {
@@ -27,7 +27,7 @@ export const warn = {
     await interaction.deferReply();
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
     if (!member) {
-      await interaction.editReply({ content: `❌ User <@${user.id}> is not a member of this guild.` });
+      await interaction.editReply({ content: `❌ User <@${user.id}> is not in this server.` });
       return;
     }
 
@@ -39,17 +39,17 @@ export const warn = {
     );
 
     const embed = new EmbedBuilder()
-      .setTitle(`⚡ SECURITY STRIKE APPLIED // #CASE-${strikeRes.caseId}`)
+      .setTitle(`⚠️ Warning Issued — ${user.tag}`)
       .setColor(strikeRes.strikeCount >= 5 ? CONFIG.DANGER_COLOR : strikeRes.strikeCount >= 2 ? CONFIG.WARN_COLOR : CONFIG.CYBERPUNK_CYAN)
-      .setDescription(`Automated 5-Strike Escalation Protocol triggered for <@${user.id}>.`)
+      .setDescription(`Warning recorded for <@${user.id}>.`)
       .addFields(
-        { name: '📋 Forensic Case', value: `\`#CASE-${strikeRes.caseId}\``, inline: true },
-        { name: '⚠️ Strike Progression', value: `\`${strikeRes.strikeCount}/5 Strikes\``, inline: true },
-        { name: '⚖️ Penalty Enforced', value: strikeRes.penaltyApplied, inline: false },
-        { name: '📝 Reason', value: reason, inline: false },
-        { name: '👮 Moderator', value: `<@${interaction.user.id}>`, inline: true }
+        { name: 'Target', value: `<@${user.id}> (\`${user.id}\`)`, inline: true },
+        { name: 'Strikes', value: `\`${strikeRes.strikeCount}/5\``, inline: true },
+        { name: 'Moderator', value: `<@${interaction.user.id}>`, inline: true },
+        { name: 'Action Taken', value: strikeRes.penaltyApplied, inline: false },
+        { name: 'Reason', value: reason, inline: false }
       )
-      .setFooter({ text: 'GUARD Enterprise SOC // 5-Strike Escalation Engine' })
+      .setFooter({ text: `Case #${strikeRes.caseId} • GUARD Security` })
       .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });

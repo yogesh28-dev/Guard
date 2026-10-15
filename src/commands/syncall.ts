@@ -10,7 +10,7 @@ import { BotStatusMonitorService } from '../services/botStatusMonitorService';
 export const syncall = {
   data: new SlashCommandBuilder()
     .setName('syncall')
-    .setDescription('Super Owner force re-fetch and reconciliation across all guilds and SOC channels')
+    .setDescription('Sync bot settings and channels across all servers')
     .setDefaultMemberPermissions(0n),
 
   async execute(interaction: ChatInputCommandInteraction) {
@@ -44,11 +44,10 @@ export const syncall = {
     await interaction.deferReply();
 
     const progressEmbed = new EmbedBuilder()
-      .setTitle('🔄 MULTI-GUILD RECONCILIATION INITIATED')
+      .setTitle('🔄 Synchronizing Servers')
       .setColor(CONFIG.CYBERPUNK_CYAN)
       .setDescription(
-        'Fetching all connected guilds, establishing 24/7 Voice Locks, snapshotting database states, ' +
-        'and synchronizing Master SOC channels with 1000ms rate-limit throttling...'
+        'Connecting to protected guilds and synchronizing voice & telemetry configurations...'
       )
       .setTimestamp();
 
@@ -63,19 +62,18 @@ export const syncall = {
     const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
 
     const completedEmbed = new EmbedBuilder()
-      .setTitle('✅ MULTI-GUILD RECONCILIATION COMPLETED')
+      .setTitle('✅ Synchronization Complete')
       .setColor(CONFIG.SUCCESS_COLOR)
       .setDescription(
-        `All connected guilds have been synchronized across the Master SOC and Target Voice infrastructure.\n` +
-        `⏱️ **Execution Time:** \`${elapsedSeconds}s\``
+        `Synchronized connected servers in \`${elapsedSeconds}s\`.`
       )
       .addFields(
-        { name: '🌐 Total Guilds Discovered', value: `\`${result.totalGuilds}\``, inline: true },
-        { name: '🛡️ Successfully Provisioned', value: `\`${result.syncedGuilds}\``, inline: true },
-        { name: '⚠️ Failed / Inaccessible', value: `\`${result.failedGuilds}\``, inline: true },
-        { name: '📊 Dedicated Telemetry', value: 'Dispatched to `<#bot-status>`', inline: false }
+        { name: '🌐 Total Servers', value: `\`${result.totalGuilds}\``, inline: true },
+        { name: '🛡️ Provisioned', value: `\`${result.syncedGuilds}\``, inline: true },
+        { name: '⚠️ Inaccessible', value: `\`${result.failedGuilds}\``, inline: true },
+        { name: '📊 Status Report', value: 'Dispatched to `<#bot-status>`', inline: false }
       )
-      .setFooter({ text: 'GUARD Enterprise SOC // Multi-Guild Sync Engine' })
+      .setFooter({ text: 'GUARD Security' })
       .setTimestamp();
 
     await interaction.editReply({ embeds: [completedEmbed] });

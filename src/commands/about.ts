@@ -11,7 +11,7 @@ import { CONFIG } from '../config';
 export const about = {
   data: new SlashCommandBuilder()
     .setName('about')
-    .setDescription('Learn about GUARD and get the bot invite link.')
+    .setDescription('Learn about GUARD and invite the bot to your server.')
     .setIntegrationTypes([0, 1])
     .setContexts([0, 1, 2]),
 
@@ -21,29 +21,29 @@ export const about = {
     const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&permissions=8&scope=bot%20applications.commands`;
 
     const embed = new EmbedBuilder()
-      .setTitle('🛡️ ABOUT GUARD ENTERPRISE')
+      .setTitle('🛡️ About GUARD')
       .setColor(CONFIG.CYBERPUNK_CYAN)
       .setDescription(
-        'GUARD . an autonomous enterprise security & SOC bot made to provide unbypassable threat intelligence to your server . securing your infrastructure at the root , GUARD creates the safest environment with absolute zero-trust architecture and 24/7 master telemetry management !!'
+        'GUARD is a security and moderation bot built to protect your Discord server with automated anti-nuke, anti-raid, and moderation tools.'
       )
       .addFields(
         {
-          name: '⚡ Core Features',
+          name: '🛡️ Core Features',
           value:
-            '• **Zero-Trust RBAC**: Absolute ownership hierarchy & hidden command security\n' +
-            '• **Anti-Nuke Engine**: Real-time channel/role restoration & rogue actor quarantine\n' +
-            '• **5-Strike Escalation**: Automated penalty ladder from warning to permanent ban\n' +
-            '• **Global Threat Intelligence**: Fleet-wide threat blocking & pre-emptive bans\n' +
-            '• **Honeypot Trap System**: Instant 24h message purge & hostile entity neutralization',
+            '• **Anti-Nuke & Anti-Raid**: Automatically protects channels, roles, and stops mass joins.\n' +
+            '• **5-Strike Auto-Mod**: Automatically warns, mutes, or bans repeat rule breakers.\n' +
+            '• **Honeypot Trap**: Instantly bans spam bots and selfbots the second they type.\n' +
+            '• **Detailed Logging**: Clean real-time logs for message edits, deletes, and member actions.\n' +
+            '• **Protected Voice**: Dedicated voice space with an owner moderation panel.',
           inline: false,
         },
         {
           name: '🔗 Quick Links',
-          value: `[Invite GUARD to Your Server](${inviteUrl})`,
+          value: `[Invite GUARD to Your Server](${inviteUrl}) • [Support Server](https://discord.gg/guard)`,
           inline: false,
         }
       )
-      .setFooter({ text: 'Use /help to view command manual • GUARD Enterprise' })
+      .setFooter({ text: 'GUARD Security • Type /help to view command manual' })
       .setTimestamp();
 
     if (clientUser) {
@@ -52,7 +52,7 @@ export const about = {
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setLabel('Invite GUARD to Your Server')
+        .setLabel('Invite GUARD')
         .setStyle(ButtonStyle.Link)
         .setURL(inviteUrl)
         .setEmoji('🛡️')

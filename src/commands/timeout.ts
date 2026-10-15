@@ -49,17 +49,17 @@ export const timeout = {
 
     const caseBadge = result.caseId ? `#CASE-${result.caseId}` : 'RECORDED';
     const embed = new EmbedBuilder()
-      .setTitle(`⏱️ TIMEOUT APPLIED // ${caseBadge}`)
+      .setTitle(`⏱️ Member Timed Out — ${user.tag}`)
       .setColor(CONFIG.WARN_COLOR)
-      .setDescription(`Member **${user.tag}** has been timed out.`)
+      .setDescription(`**${user.tag}** has been timed out for ${duration} minute(s).`)
       .addFields(
-        { name: '📋 Forensic Case', value: `\`${caseBadge}\``, inline: true },
-        { name: '👤 Target', value: `<@${user.id}> (\`${user.id}\`)`, inline: true },
-        { name: '⏳ Duration', value: `\`${duration} minutes\``, inline: true },
-        { name: '👮 Moderator', value: `<@${interaction.user.id}>`, inline: true },
-        { name: '📝 Reason', value: reason, inline: false }
+        { name: 'Target', value: `<@${user.id}> (\`${user.id}\`)`, inline: true },
+        { name: 'Duration', value: `\`${duration}m\``, inline: true },
+        { name: 'Moderator', value: `<@${interaction.user.id}>`, inline: true },
+        { name: 'Case ID', value: `\`${caseBadge}\``, inline: true },
+        { name: 'Reason', value: reason, inline: false }
       )
-      .setFooter({ text: 'GUARD Enterprise SOC // Enforcement Grid' })
+      .setFooter({ text: 'GUARD Security' })
       .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });

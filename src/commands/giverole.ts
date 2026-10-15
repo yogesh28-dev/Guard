@@ -9,16 +9,16 @@ import { MasterSocService } from '../services/masterSocService';
 export const giverole = {
   data: new SlashCommandBuilder()
     .setName('giverole')
-    .setDescription('Super Owner Remote Role Assignment across target guild')
+    .setDescription('Give or remove a role from a member')
     .setDefaultMemberPermissions(0n)
     .addStringOption(option =>
-      option.setName('user').setDescription('Target User ID or mention').setRequired(true)
+      option.setName('user').setDescription('User ID or mention').setRequired(true)
     )
     .addStringOption(option =>
-      option.setName('role').setDescription('Target Role ID or Name').setRequired(true)
+      option.setName('role').setDescription('Role ID or name').setRequired(true)
     )
     .addStringOption(option =>
-      option.setName('guild_id').setDescription('Target Guild ID (defaults to current target)').setRequired(false)
+      option.setName('guild_id').setDescription('Server ID (optional)').setRequired(false)
     ),
 
   async execute(interaction: ChatInputCommandInteraction) {

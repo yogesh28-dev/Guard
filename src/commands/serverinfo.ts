@@ -7,7 +7,7 @@ import { ModerationService } from '../services/moderationService';
 export const serverinfo = {
   data: new SlashCommandBuilder()
     .setName('serverinfo')
-    .setDescription('Display detailed server telemetry and security profile')
+    .setDescription('View stats, roles, and settings for this server')
     .setDefaultMemberPermissions(0n),
 
   async execute(interaction: ChatInputCommandInteraction) {

@@ -8,17 +8,17 @@ import { updateGuildConfig } from '../db';
 export const auditlogs = {
   data: new SlashCommandBuilder()
     .setName('auditlogs')
-    .setDescription('Configure the current channel to route a specific category of security and audit telemetry')
+    .setDescription('Set this channel to receive server logs')
     .setDefaultMemberPermissions(0n)
     .addStringOption(option =>
       option
         .setName('type')
-        .setDescription('The log telemetry stream to route to this channel')
+        .setDescription('The type of logs to send to this channel')
         .setRequired(true)
         .addChoices(
-          { name: 'audit logs (VC Events: join, leave, switch, move)', value: 'audit logs' },
-          { name: 'server logs (Mutations: roles, kicks, bans, timeouts, mutes)', value: 'server logs' },
-          { name: 'message logs (Mutations: message edits with diffs, deletes)', value: 'message logs' }
+          { name: 'Voice logs (joins, leaves, channel switches, mutes)', value: 'audit logs' },
+          { name: 'Server logs (role changes, kicks, bans, timeouts)', value: 'server logs' },
+          { name: 'Message logs (message edits, diffs, and deletes)', value: 'message logs' }
         )
     ),
 
@@ -39,17 +39,17 @@ export const auditlogs = {
     if (type === 'audit logs') {
       await updateGuildConfig(interaction.guildId, { auditVcLogChannelId: channelId });
       await interaction.reply({
-        content: `🎙️ **TELEMETRY ROUTED**: Voice channel activity logs (joins, leaves, switches, moves) will now stream to <#${channelId}>.`,
+        content: `🎙️ Voice activity logs will now be sent to <#${channelId}>.`,
       });
     } else if (type === 'server logs') {
       await updateGuildConfig(interaction.guildId, { auditServerLogChannelId: channelId, logChannelId: channelId });
       await interaction.reply({
-        content: `🛡️ **TELEMETRY ROUTED**: Server mutation logs (role modifications, bans, kicks, timeouts) will now stream to <#${channelId}>.`,
+        content: `🛡️ Server mutation and moderation logs will now be sent to <#${channelId}>.`,
       });
     } else if (type === 'message logs') {
       await updateGuildConfig(interaction.guildId, { auditMessageLogChannelId: channelId });
       await interaction.reply({
-        content: `📝 **TELEMETRY ROUTED**: Message mutation logs (edits with diffs, deletions) will now stream to <#${channelId}>.`,
+        content: `📝 Message edit and deletion logs will now be sent to <#${channelId}>.`,
       });
     }
   },

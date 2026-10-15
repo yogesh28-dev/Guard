@@ -340,11 +340,11 @@ describe('Master SOC & Slash Commands RBAC', () => {
     const replyArgs = mockReply.mock.calls[0][0];
     const embed = replyArgs.embeds[0].data;
 
-    expect(embed.title).toBe('🛡️ ABOUT GUARD ENTERPRISE');
-    expect(embed.description).toContain('GUARD . an autonomous enterprise security & SOC bot');
+    expect(embed.title).toBe('🛡️ About GUARD');
+    expect(embed.description).toContain('GUARD is a security and moderation bot');
     expect(embed.fields?.some((f: any) => f.name.includes('Core Features'))).toBe(true);
     expect(embed.fields?.some((f: any) => f.name.includes('Quick Links'))).toBe(true);
-    expect(embed.footer?.text).toContain('Use /help to view command manual');
+    expect(embed.footer?.text).toContain('/help');
 
     // Button row
     expect(replyArgs.components?.length).toBeGreaterThanOrEqual(1);
@@ -378,7 +378,7 @@ describe('Master SOC & Slash Commands RBAC', () => {
     const replyArgs = mockReply.mock.calls[0][0];
     const embed = replyArgs.embeds[0].data;
 
-    expect(embed.title).toBe('🛡️ GUARD ENTERPRISE // SECURITY & DEFENSE DIRECTORY');
+    expect(embed.title).toBe('🛡️ GUARD // Commands');
     expect(embed.fields?.length).toBeGreaterThanOrEqual(4);
     // Ephemeral for regular members
     expect(replyArgs.ephemeral).toBe(true);

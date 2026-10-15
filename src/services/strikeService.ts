@@ -51,7 +51,7 @@ export class StrikeService {
       const client = data.client;
       if (client) {
         const embed = new EmbedBuilder()
-          .setTitle(`🛡️ FORENSIC CASE LOG // #CASE-${createdCase.caseId}`)
+          .setTitle(`🛡️ Moderation Case // #CASE-${createdCase.caseId}`)
           .setColor(
             createdCase.action === 'BAN'
               ? CONFIG.DANGER_COLOR
@@ -59,16 +59,16 @@ export class StrikeService {
               ? CONFIG.WARN_COLOR
               : CONFIG.CYBERPUNK_CYAN
           )
-          .setDescription(`Forensic security enforcement action recorded in master audit ledger.`)
+          .setDescription(`Moderation enforcement action recorded in audit log.`)
           .addFields(
-            { name: '📋 Forensic Case ID', value: `\`#CASE-${createdCase.caseId}\``, inline: true },
+            { name: '📋 Case ID', value: `\`#CASE-${createdCase.caseId}\``, inline: true },
             { name: '⚖️ Action', value: `\`${createdCase.action}\``, inline: true },
             { name: '🎯 Target', value: `<@${createdCase.targetId}> (${createdCase.targetTag} | \`${createdCase.targetId}\`)`, inline: false },
             { name: '👮 Moderator', value: `<@${createdCase.moderatorId}> (\`${createdCase.moderatorId}\`)`, inline: true },
-            { name: '🌐 Target Guild', value: `\`${createdCase.guildId}\``, inline: true },
+            { name: '🌐 Server ID', value: `\`${createdCase.guildId}\``, inline: true },
             { name: '📝 Reason', value: createdCase.reason, inline: false }
           )
-          .setFooter({ text: `FORENSIC LEDGER // Case #${createdCase.caseId}` })
+          .setFooter({ text: `Case #${createdCase.caseId} • GUARD Security` })
           .setTimestamp(createdCase.createdAt);
 
         if (createdCase.evidenceJson) {
@@ -135,14 +135,14 @@ export class StrikeService {
       penaltyApplied = 'Warning issued + DM security alert dispatched';
 
       const dmEmbed = new EmbedBuilder()
-        .setTitle('⚠️ GUARD SECURITY // STRIKE 1 WARNING')
+        .setTitle(`⚠️ Warning — ${guild.name}`)
         .setColor(CONFIG.WARN_COLOR)
         .setDescription(
-          `You have received **Strike 1 of 5** in **${guild.name}**.\n\n` +
+          `You have received a warning in **${guild.name}** (**1/5 strikes**).\n\n` +
           `**Reason:** ${reason}\n\n` +
-          `**Auto-Escalation Protocol Active:** Further infractions will trigger automated timeouts and permanent banishment.`
+          `*Note: Repeated infractions will lead to timeouts and bans.*`
         )
-        .setFooter({ text: 'GUARD Enterprise SOC // 5-Strike Escalation Grid' })
+        .setFooter({ text: 'GUARD Security' })
         .setTimestamp();
 
       await member.send({ embeds: [dmEmbed] }).catch(() => null);
@@ -152,14 +152,13 @@ export class StrikeService {
       penaltyApplied = '15-minute communication timeout applied';
 
       const dmEmbed = new EmbedBuilder()
-        .setTitle('⏱️ GUARD SECURITY // STRIKE 2 TIMEOUT')
+        .setTitle(`⏱️ Timed Out (15m) — ${guild.name}`)
         .setColor(CONFIG.WARN_COLOR)
         .setDescription(
-          `You have received **Strike 2 of 5** in **${guild.name}**.\n\n` +
-          `**Penalty:** 15-minute communication timeout\n` +
+          `You were timed out for 15 minutes in **${guild.name}** (**2/5 strikes**).\n\n` +
           `**Reason:** ${reason}`
         )
-        .setFooter({ text: 'GUARD Enterprise SOC // 5-Strike Escalation Grid' })
+        .setFooter({ text: 'GUARD Security' })
         .setTimestamp();
 
       await member.send({ embeds: [dmEmbed] }).catch(() => null);
@@ -172,14 +171,13 @@ export class StrikeService {
       penaltyApplied = '6-hour communication timeout applied';
 
       const dmEmbed = new EmbedBuilder()
-        .setTitle('⏱️ GUARD SECURITY // STRIKE 3 TIMEOUT')
+        .setTitle(`⏱️ Timed Out (6h) — ${guild.name}`)
         .setColor(CONFIG.WARN_COLOR)
         .setDescription(
-          `You have received **Strike 3 of 5** in **${guild.name}**.\n\n` +
-          `**Penalty:** 6-hour communication timeout\n` +
+          `You were timed out for 6 hours in **${guild.name}** (**3/5 strikes**).\n\n` +
           `**Reason:** ${reason}`
         )
-        .setFooter({ text: 'GUARD Enterprise SOC // 5-Strike Escalation Grid' })
+        .setFooter({ text: 'GUARD Security' })
         .setTimestamp();
 
       await member.send({ embeds: [dmEmbed] }).catch(() => null);
@@ -220,15 +218,14 @@ export class StrikeService {
       const strippedNotice = strippedRoles.length > 0 ? `\n**Revoked Privileged Roles:** ${strippedRoles.join(', ')}` : '';
 
       const dmEmbed = new EmbedBuilder()
-        .setTitle('🚨 GUARD SECURITY // STRIKE 4 FINAL WARNING')
+        .setTitle(`🚨 Final Warning (24h Timeout) — ${guild.name}`)
         .setColor(CONFIG.DANGER_COLOR)
         .setDescription(
-          `You have received **Strike 4 of 5** in **${guild.name}** (FINAL WARNING).\n\n` +
-          `**Penalty:** 24-hour communication timeout and removal of privileged roles${strippedNotice}\n` +
-          `**Reason:** ${reason}\n\n` +
-          `⚠️ **ANY NEXT INFRACTION WILL RESULT IN AN IMMEDIATE PERMANENT BAN.**`
+          `You were timed out for 24 hours in **${guild.name}** (**4/5 strikes**).\n\n` +
+          `**Reason:** ${reason}${strippedNotice}\n\n` +
+          `*Any further infraction will result in a permanent ban.*`
         )
-        .setFooter({ text: 'GUARD Enterprise SOC // 5-Strike Escalation Grid' })
+        .setFooter({ text: 'GUARD Security' })
         .setTimestamp();
 
       await member.send({ embeds: [dmEmbed] }).catch(() => null);
@@ -241,14 +238,13 @@ export class StrikeService {
       penaltyApplied = 'Permanent Guild Ban applied';
 
       const dmEmbed = new EmbedBuilder()
-        .setTitle('🔨 GUARD SECURITY // STRIKE 5 PERMANENT BAN')
+        .setTitle(`🔨 Banned — ${guild.name}`)
         .setColor(CONFIG.DANGER_COLOR)
         .setDescription(
-          `You have reached **Strike 5 of 5** in **${guild.name}**.\n\n` +
-          `**Penalty:** Permanent Guild Banishment\n` +
+          `You have been permanently banned from **${guild.name}** (**5/5 strikes**).\n\n` +
           `**Reason:** ${reason}`
         )
-        .setFooter({ text: 'GUARD Enterprise SOC // 5-Strike Escalation Grid' })
+        .setFooter({ text: 'GUARD Security' })
         .setTimestamp();
 
       await member.send({ embeds: [dmEmbed] }).catch(() => null);

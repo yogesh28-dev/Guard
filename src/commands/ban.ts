@@ -49,16 +49,16 @@ export const ban = {
 
     const caseBadge = result.caseId ? `#CASE-${result.caseId}` : 'RECORDED';
     const embed = new EmbedBuilder()
-      .setTitle(`🔨 GUILD BAN ENFORCED // ${caseBadge}`)
+      .setTitle(`🔨 Member Banned — ${user.tag}`)
       .setColor(CONFIG.DANGER_COLOR)
-      .setDescription(`User **${user.tag}** has been banned from the server.`)
+      .setDescription(`**${user.tag}** has been banned from the server.`)
       .addFields(
-        { name: '📋 Forensic Case', value: `\`${caseBadge}\``, inline: true },
-        { name: '👤 Target', value: `<@${user.id}> (\`${user.id}\`)`, inline: true },
-        { name: '👮 Moderator', value: `<@${interaction.user.id}>`, inline: true },
-        { name: '📝 Reason', value: reason, inline: false }
+        { name: 'Target', value: `<@${user.id}> (\`${user.id}\`)`, inline: true },
+        { name: 'Moderator', value: `<@${interaction.user.id}>`, inline: true },
+        { name: 'Case ID', value: `\`${caseBadge}\``, inline: true },
+        { name: 'Reason', value: reason, inline: false }
       )
-      .setFooter({ text: 'GUARD Enterprise SOC // Enforcement Grid' })
+      .setFooter({ text: 'GUARD Security' })
       .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });

@@ -239,18 +239,16 @@ export class TargetProvisioningService {
    */
   public static createVoiceControlPanel(guild: Guild, ownerId: string) {
     const embed = new EmbedBuilder()
-      .setTitle('🎙️ GUARD ENTERPRISE // VOICE CONTROL PANEL')
+      .setTitle('🎙️ Voice Control Panel')
       .setDescription(
-        `Welcome <@${ownerId}> to **${CONFIG.GUARD_VC_NAME}**.\n` +
-        `This exclusive SOC Voice Console provides full audio, member control, and emergency lock capabilities.`
+        `Welcome <@${ownerId}>. Use the buttons below to manage **${CONFIG.GUARD_VC_NAME}**, control members, or adjust voice settings.`
       )
       .setColor(CONFIG.CYBERPUNK_CYAN)
       .addFields(
-        { name: '🔒 Security Level', value: 'ENTERPRISE RESTRICTED', inline: true },
-        { name: '👥 Target Channel', value: `\`${CONFIG.GUARD_VC_NAME}\``, inline: true },
-        { name: '👑 Console Access', value: `<@${ownerId}>`, inline: true }
+        { name: '👥 Voice Room', value: `\`${CONFIG.GUARD_VC_NAME}\``, inline: true },
+        { name: '👑 Managed By', value: `<@${ownerId}>`, inline: true }
       )
-      .setFooter({ text: 'GUARD Enterprise SOC Voice Security Protocol' })
+      .setFooter({ text: 'GUARD Security • Voice Controls' })
       .setTimestamp();
 
     // Row 1: Audio Mass Controls (5 buttons)
@@ -586,16 +584,17 @@ export class TargetProvisioningService {
         const userLimit = targetVC ? (targetVC.userLimit === 0 ? 'Unlimited' : targetVC.userLimit) : 'N/A';
 
         const infoEmbed = new EmbedBuilder()
-          .setTitle('📊 VOICE CHANNEL DIAGNOSTICS')
-          .setColor(CONFIG.CYBERPUNK_PURPLE)
+          .setTitle('📊 Voice Channel Stats')
+          .setColor(CONFIG.CYBERPUNK_CYAN)
           .addFields(
-            { name: 'Channel Name', value: targetVC?.name || 'N/A', inline: true },
-            { name: 'Connected Members', value: `${count}`, inline: true },
+            { name: 'Channel', value: targetVC?.name || 'N/A', inline: true },
+            { name: 'Connected', value: `${count} members`, inline: true },
             { name: 'Bitrate', value: `${bitrate} kbps`, inline: true },
             { name: 'User Limit', value: `${userLimit}`, inline: true },
-            { name: 'RTC Region', value: targetVC?.rtcRegion || 'Automatic', inline: true },
-            { name: 'Video Status', value: targetVC?.permissionsFor(guild.roles.everyone)?.has(PermissionFlagsBits.Stream) ? 'Allowed' : 'Restricted', inline: true }
+            { name: 'Region', value: targetVC?.rtcRegion || 'Automatic', inline: true },
+            { name: 'Screenshare', value: targetVC?.permissionsFor(guild.roles.everyone)?.has(PermissionFlagsBits.Stream) ? 'Enabled' : 'Disabled', inline: true }
           )
+          .setFooter({ text: 'GUARD Security' })
           .setTimestamp();
 
         await interaction.reply({ embeds: [infoEmbed], ephemeral: true });

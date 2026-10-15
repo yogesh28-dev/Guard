@@ -273,7 +273,7 @@ export class ModerationService {
 
       return {
         success: true,
-        message: `🚨 Emergency lockdown initiated. Restricted permissions across ${lockedCount} text channels.`,
+        message: `🚨 Server locked down. Restricted messaging across ${lockedCount} text channels.`,
       };
     } catch (error: any) {
       return {
@@ -313,7 +313,7 @@ export class ModerationService {
 
       return {
         success: true,
-        message: `✅ Lockdown lifted. Restored normal permissions across ${unlockedCount} text channels.`,
+        message: `✅ Lockdown lifted. Restored permissions across ${unlockedCount} text channels.`,
       };
     } catch (error: any) {
       return {
@@ -434,22 +434,22 @@ export class ModerationService {
     const config = await getOrCreateGuildConfig(guild.id);
 
     return new EmbedBuilder()
-      .setTitle(`🛡️ GUARD SOC // SERVER INTELLIGENCE: ${guild.name}`)
+      .setTitle(`📊 Server Information — ${guild.name}`)
       .setThumbnail(guild.iconURL({ size: 256 }) || null)
       .setColor(CONFIG.CYBERPUNK_CYAN)
       .addFields(
         { name: '🆔 Server ID', value: `\`${guild.id}\``, inline: true },
-        { name: '👑 Server Owner', value: owner ? `<@${owner.id}> (${owner.user.tag})` : 'Unknown', inline: true },
-        { name: '📅 Created At', value: `<t:${Math.floor(guild.createdTimestamp / 1000)}:D>`, inline: true },
+        { name: '👑 Owner', value: owner ? `<@${owner.id}> (${owner.user.tag})` : 'Unknown', inline: true },
+        { name: '📅 Created', value: `<t:${Math.floor(guild.createdTimestamp / 1000)}:D>`, inline: true },
         { name: '👥 Members', value: `\`${memberCount.toLocaleString()}\``, inline: true },
         { name: '📁 Channels', value: `Total: \`${channels.size}\` (💬 \`${textChannels}\` | 🔊 \`${voiceChannels}\` | 📂 \`${categories}\`)`, inline: true },
         { name: '🎭 Roles', value: `\`${rolesCount}\``, inline: true },
         { name: '🚀 Boost Level', value: `Tier ${guild.premiumTier} (\`${guild.premiumSubscriptionCount || 0}\` boosts)`, inline: true },
-        { name: '🔐 Anti-Nuke', value: config.antiNukeEnabled ? '🟢 ACTIVE' : '🔴 DISABLED', inline: true },
-        { name: '🛡️ Anti-Raid', value: config.antiRaidEnabled ? '🟢 ACTIVE' : '🔴 DISABLED', inline: true },
-        { name: '🔒 Lockdown Status', value: config.isLockedDown ? '🚨 ACTIVE' : '🟢 NORMAL', inline: true }
+        { name: '🔐 Anti-Nuke', value: config.antiNukeEnabled ? '🟢 Enabled' : '⚪ Disabled', inline: true },
+        { name: '🛡️ Anti-Raid', value: config.antiRaidEnabled ? '🟢 Enabled' : '⚪ Disabled', inline: true },
+        { name: '🔒 Lockdown', value: config.isLockedDown ? '🚨 Active' : '🟢 Inactive', inline: true }
       )
-      .setFooter({ text: `GUARD Enterprise SOC | ID: ${guild.id}` })
+      .setFooter({ text: `Server ID: ${guild.id} • GUARD Security` })
       .setTimestamp();
   }
 
@@ -461,25 +461,25 @@ export class ModerationService {
     const isOwner = guild.ownerId === user.id;
 
     const embed = new EmbedBuilder()
-      .setTitle(`👤 IDENTITY DOSSIER: ${user.tag}`)
+      .setTitle(`👤 Member Information — ${user.tag}`)
       .setThumbnail(user.displayAvatarURL({ size: 256 }))
-      .setColor(CONFIG.CYBERPUNK_PURPLE)
+      .setColor(CONFIG.CYBERPUNK_CYAN)
       .addFields(
         { name: '🆔 User ID', value: `\`${user.id}\``, inline: true },
-        { name: '🤖 Bot Account', value: user.bot ? 'Yes' : 'No', inline: true },
-        { name: '👑 Server Owner', value: isOwner ? '🌟 YES' : 'No', inline: true },
-        { name: '📅 Account Created', value: `<t:${Math.floor(user.createdTimestamp / 1000)}:R>`, inline: true }
+        { name: '🤖 Bot', value: user.bot ? 'Yes' : 'No', inline: true },
+        { name: '👑 Owner', value: isOwner ? 'Yes' : 'No', inline: true },
+        { name: '📅 Created', value: `<t:${Math.floor(user.createdTimestamp / 1000)}:R>`, inline: true }
       );
 
     if (member) {
       embed.addFields(
-        { name: '📥 Joined Server', value: member.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : 'Unknown', inline: true },
+        { name: '📥 Joined', value: member.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : 'Unknown', inline: true },
         { name: '🎭 Highest Role', value: member.roles.highest.name, inline: true },
-        { name: '🏷️ Assigned Roles', value: roles.length > 500 ? roles.substring(0, 497) + '...' : (roles || 'None'), inline: false }
+        { name: '🏷️ Roles', value: roles.length > 500 ? roles.substring(0, 497) + '...' : (roles || 'None'), inline: false }
       );
     }
 
-    embed.setFooter({ text: 'GUARD Intelligence Dossier' }).setTimestamp();
+    embed.setFooter({ text: `User ID: ${user.id} • GUARD Security` }).setTimestamp();
     return embed;
   }
 }
