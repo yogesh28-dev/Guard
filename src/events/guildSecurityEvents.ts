@@ -33,7 +33,7 @@ export async function onWebhooksUpdate(channel: NonThreadGuildBasedChannel): Pro
   // 2. Telemetry Log
   const embed = new EmbedBuilder()
     .setTitle('🔗 WEBHOOK ACTIVITY')
-    .setColor(CONFIG.CYBERPUNK_CYAN)
+    .setColor(0x14FA22)
     .setDescription(`Webhook configuration updated in channel <#${channel.id}>.`)
     .setTimestamp();
 

@@ -19,7 +19,7 @@ export const help = {
 
     const embed = new EmbedBuilder()
       .setTitle('🛡️ GUARD // Commands')
-      .setColor(isAuthorizedRoot ? CONFIG.CYBERPUNK_PURPLE : CONFIG.CYBERPUNK_CYAN)
+      .setColor(0x14FA22)
       .setDescription(
         'Here are the commands you can use with **GUARD** on this server.'
       )

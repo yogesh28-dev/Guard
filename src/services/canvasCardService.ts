@@ -65,8 +65,8 @@ export class CanvasCardService {
 
     // 3. Cyber Neon Corner Accents & Card Border
     ctx.save();
-    ctx.strokeStyle = '#00f0ff';
-    ctx.shadowColor = '#00f0ff';
+    ctx.strokeStyle = '#14FA22';
+    ctx.shadowColor = '#14FA22';
     ctx.shadowBlur = 15;
     ctx.lineWidth = 2;
     ctx.strokeRect(20, 20, width - 40, height - 40);
@@ -90,9 +90,9 @@ export class CanvasCardService {
     ctx.restore();
 
     // 4. Header Bar with Guild Info
-    ctx.fillStyle = 'rgba(0, 240, 255, 0.12)';
+    ctx.fillStyle = 'rgba(20, 250, 34, 0.12)';
     ctx.fillRect(40, 35, width - 80, 30);
-    ctx.fillStyle = '#00f0ff';
+    ctx.fillStyle = '#14FA22';
     ctx.font = 'bold 14px sans-serif';
     ctx.fillText(`GUARD PROTOCOL // SYSTEM_JOIN // ${options.guildName.toUpperCase()}`, 55, 55);
 
@@ -105,9 +105,9 @@ export class CanvasCardService {
     ctx.save();
     ctx.beginPath();
     ctx.arc(avatarX, avatarY, avatarRadius + 6, 0, Math.PI * 2);
-    ctx.strokeStyle = '#00f0ff';
+    ctx.strokeStyle = '#14FA22';
     ctx.lineWidth = 4;
-    ctx.shadowColor = '#00f0ff';
+    ctx.shadowColor = '#14FA22';
     ctx.shadowBlur = 20;
     ctx.stroke();
 
@@ -153,7 +153,7 @@ export class CanvasCardService {
         avatarRadius * 2,
         avatarRadius * 2
       );
-      ctx.fillStyle = '#00f0ff';
+      ctx.fillStyle = '#14FA22';
       ctx.font = 'bold 50px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -172,7 +172,7 @@ export class CanvasCardService {
     ctx.save();
     ctx.fillStyle = '#ffffff';
     ctx.font = '900 52px sans-serif';
-    ctx.shadowColor = 'rgba(0, 240, 255, 0.8)';
+    ctx.shadowColor = 'rgba(20, 250, 34, 0.8)';
     ctx.shadowBlur = 18;
     ctx.fillText('WELCOME', 260, 205);
     ctx.restore();
@@ -191,20 +191,20 @@ export class CanvasCardService {
     const badgeW = 220;
     const badgeH = 34;
 
-    ctx.fillStyle = 'rgba(0, 240, 255, 0.15)';
+    ctx.fillStyle = 'rgba(20, 250, 34, 0.15)';
     ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
-    ctx.strokeStyle = '#00f0ff';
+    ctx.strokeStyle = '#14FA22';
     ctx.lineWidth = 1;
     ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
 
-    ctx.fillStyle = '#00f0ff';
+    ctx.fillStyle = '#14FA22';
     ctx.font = 'bold 14px sans-serif';
     ctx.fillText(`MEMBER #${options.memberCount.toLocaleString()}`, badgeX + 16, badgeY + 22);
 
     // Bottom Decorative Bar
     ctx.fillStyle = 'rgba(255, 0, 127, 0.6)';
     ctx.fillRect(40, height - 35, 120, 3);
-    ctx.fillStyle = 'rgba(0, 240, 255, 0.6)';
+    ctx.fillStyle = 'rgba(20, 250, 34, 0.6)';
     ctx.fillRect(170, height - 35, width - 210, 3);
 
     return canvas.toBuffer('image/png');

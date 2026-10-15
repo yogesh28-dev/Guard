@@ -40,7 +40,7 @@ export const warn = {
 
     const embed = new EmbedBuilder()
       .setTitle(`⚠️ Warning Issued — ${user.tag}`)
-      .setColor(strikeRes.strikeCount >= 5 ? CONFIG.DANGER_COLOR : strikeRes.strikeCount >= 2 ? CONFIG.WARN_COLOR : CONFIG.CYBERPUNK_CYAN)
+      .setColor(strikeRes.strikeCount >= 5 ? CONFIG.DANGER_COLOR : strikeRes.strikeCount >= 2 ? CONFIG.WARN_COLOR : 0x14FA22)
       .setDescription(`Warning recorded for <@${user.id}>.`)
       .addFields(
         { name: 'Target', value: `<@${user.id}> (\`${user.id}\`)`, inline: true },

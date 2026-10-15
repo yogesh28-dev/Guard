@@ -22,7 +22,7 @@ export const about = {
 
     const embed = new EmbedBuilder()
       .setTitle('🛡️ About GUARD')
-      .setColor(CONFIG.CYBERPUNK_CYAN)
+      .setColor(0x14FA22)
       .setDescription(
         'GUARD is a security and moderation bot built to protect your Discord server with automated anti-nuke, anti-raid, and moderation tools.'
       )
