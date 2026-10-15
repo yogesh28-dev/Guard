@@ -57,7 +57,7 @@ export class StrikeService {
               ? CONFIG.DANGER_COLOR
               : createdCase.action === 'TIMEOUT' || createdCase.action === 'WARN'
               ? CONFIG.WARN_COLOR
-              : 0x14FA22
+              : CONFIG.THEME_COLOR
           )
           .setDescription(`Moderation enforcement action recorded in audit log.`)
           .addFields(

@@ -243,7 +243,7 @@ export class TargetProvisioningService {
       .setDescription(
         `Welcome <@${ownerId}>. Use the buttons below to manage **${CONFIG.GUARD_VC_NAME}**, control members, or adjust voice settings.`
       )
-      .setColor(0x14FA22)
+      .setColor(CONFIG.THEME_COLOR)
       .addFields(
         { name: '👥 Voice Room', value: `\`${CONFIG.GUARD_VC_NAME}\``, inline: true },
         { name: '👑 Managed By', value: `<@${ownerId}>`, inline: true }
@@ -585,7 +585,7 @@ export class TargetProvisioningService {
 
         const infoEmbed = new EmbedBuilder()
           .setTitle('📊 Voice Channel Stats')
-          .setColor(0x14FA22)
+          .setColor(CONFIG.THEME_COLOR)
           .addFields(
             { name: 'Channel', value: targetVC?.name || 'N/A', inline: true },
             { name: 'Connected', value: `${count} members`, inline: true },

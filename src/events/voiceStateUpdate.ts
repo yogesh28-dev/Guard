@@ -61,7 +61,7 @@ export async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceSt
     if (voiceAction) {
       const embed = new EmbedBuilder()
         .setTitle(voiceAction)
-        .setColor(0x14FA22)
+        .setColor(CONFIG.THEME_COLOR)
         .setDescription(desc)
         .setFooter({ text: `User ID: ${member.id}` })
         .setTimestamp();

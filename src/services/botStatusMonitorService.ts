@@ -177,7 +177,7 @@ export class BotStatusMonitorService {
 
     return new EmbedBuilder()
       .setTitle('📊 GUARD SOC // ENTERPRISE BOT HOURLY TELEMETRY')
-      .setColor(0x14FA22)
+      .setColor(CONFIG.THEME_COLOR)
       .setDescription(
         `Automated hourly diagnostic pulse of the GUARD Enterprise Security Infrastructure.\n` +
         `**Status:** \`${statusBadge}\`\n` +

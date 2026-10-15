@@ -61,6 +61,15 @@ export function createBotClient(): Client {
   return client;
 }
 
+// Global process safety handlers to prevent unexpected crashes
+process.on('unhandledRejection', (reason) => {
+  console.error('[UNHANDLED REJECTION]:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[UNCAUGHT EXCEPTION]:', err);
+});
+
 // Auto-start when executed directly
 if (require.main === module || process.env.NODE_ENV !== 'test') {
   const client = createBotClient();
@@ -68,3 +77,4 @@ if (require.main === module || process.env.NODE_ENV !== 'test') {
     console.error('[GUARD LAUNCH ERROR] Failed to connect to Discord Gateway:', err);
   });
 }
+

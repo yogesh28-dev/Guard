@@ -45,7 +45,7 @@ export const syncall = {
 
     const progressEmbed = new EmbedBuilder()
       .setTitle('🔄 Synchronizing Servers')
-      .setColor(0x14FA22)
+      .setColor(CONFIG.THEME_COLOR)
       .setDescription(
         'Connecting to protected guilds and synchronizing voice & telemetry configurations...'
       )
@@ -63,7 +63,7 @@ export const syncall = {
 
     const completedEmbed = new EmbedBuilder()
       .setTitle('✅ Synchronization Complete')
-      .setColor(0x14FA22)
+      .setColor(CONFIG.THEME_COLOR)
       .setDescription(
         `Synchronized connected servers in \`${elapsedSeconds}s\`.`
       )

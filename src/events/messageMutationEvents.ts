@@ -30,7 +30,7 @@ export async function onMessageUpdate(
 
   const embed = new EmbedBuilder()
     .setTitle('📝 MESSAGE EDITED')
-    .setColor(0x14FA22)
+    .setColor(CONFIG.THEME_COLOR)
     .setDescription(
       `Message by <@${msg.author.id}> edited in <#${msg.channel.id}>.\n` +
       `[Jump to Message](${msg.url})`

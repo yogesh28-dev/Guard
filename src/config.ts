@@ -12,13 +12,13 @@ export const CONFIG = {
   GUARD_CATEGORY_ALT_NAME: '𝖦𝖺𝗎𝗋𝖽 𝖲𝗉𝖺𝖼𝖾',
   GUARD_VC_NAME: 'Guard Vc',
   GUARD_VC_ALT_NAME: '𝖦𝖺𝗎𝗋𝖽 𝖵𝖼',
-  THEME_COLOR: 0x14FA22,
-  SUCCESS_COLOR: 0x14FA22,
+  THEME_COLOR: 0xffffff, // ⚪ Pure White Embed & Primary Theme Color
+  SUCCESS_COLOR: 0xffffff,
   DANGER_COLOR: 0xff0055,
   WARN_COLOR: 0xffaa00,
   CYBERPUNK_PURPLE: 0x9b5de5,
-  CYBERPUNK_CYAN: 0x14FA22,
-  PRIMARY_COLOR: 0x14FA22,
+  CYBERPUNK_CYAN: 0xffffff,
+  PRIMARY_COLOR: 0xffffff,
 };
 
 export function isMasterOwner(userId: string): boolean {

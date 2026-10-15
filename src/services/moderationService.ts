@@ -436,7 +436,7 @@ export class ModerationService {
     return new EmbedBuilder()
       .setTitle(`📊 Server Information — ${guild.name}`)
       .setThumbnail(guild.iconURL({ size: 256 }) || null)
-      .setColor(0x14FA22)
+      .setColor(CONFIG.THEME_COLOR)
       .addFields(
         { name: '🆔 Server ID', value: `\`${guild.id}\``, inline: true },
         { name: '👑 Owner', value: owner ? `<@${owner.id}> (${owner.user.tag})` : 'Unknown', inline: true },
@@ -463,7 +463,7 @@ export class ModerationService {
     const embed = new EmbedBuilder()
       .setTitle(`👤 Member Information — ${user.tag}`)
       .setThumbnail(user.displayAvatarURL({ size: 256 }))
-      .setColor(0x14FA22)
+      .setColor(CONFIG.THEME_COLOR)
       .addFields(
         { name: '🆔 User ID', value: `\`${user.id}\``, inline: true },
         { name: '🤖 Bot', value: user.bot ? 'Yes' : 'No', inline: true },
