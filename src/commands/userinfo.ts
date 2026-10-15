@@ -8,6 +8,7 @@ export const userinfo = {
   data: new SlashCommandBuilder()
     .setName('userinfo')
     .setDescription('Display security dossier and profile for a user')
+    .setDefaultMemberPermissions(0n)
     .addUserOption(option =>
       option.setName('user').setDescription('Target user to inspect (defaults to yourself)').setRequired(false)
     ),

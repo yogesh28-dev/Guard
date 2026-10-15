@@ -416,10 +416,21 @@ export class MasterSocService {
 
       // 2. Stream to Master Guild's #audit-logs for this target guild
       const masterGuild = client.guilds.cache.get(CONFIG.MASTER_GUILD_ID);
-      if (masterGuild) {
-        const auditChannel = masterGuild.channels.cache.find(
-          c => c.type === ChannelType.GuildText && (c as TextChannel).topic?.includes(`TARGET_GUILD_ID:${targetGuildId}:AUDIT`)
-        ) as TextChannel | undefined;
+      if (masterGuild && masterGuild.channels?.cache) {
+        let auditChannel: TextChannel | undefined;
+        const cache = masterGuild.channels.cache as any;
+        if (typeof cache.find === 'function') {
+          auditChannel = cache.find(
+            (c: any) => c.type === ChannelType.GuildText && c.topic?.includes(`TARGET_GUILD_ID:${targetGuildId}:AUDIT`)
+          );
+        } else if (typeof cache.values === 'function') {
+          for (const c of cache.values()) {
+            if (c.type === ChannelType.GuildText && c.topic?.includes(`TARGET_GUILD_ID:${targetGuildId}:AUDIT`)) {
+              auditChannel = c;
+              break;
+            }
+          }
+        }
 
         if (auditChannel) {
           await auditChannel.send({ embeds: [embed] }).catch(() => null);

@@ -3,13 +3,45 @@ import { getOrCreateGuildConfig } from '../db';
 import { CanvasCardService } from '../services/canvasCardService';
 import { MasterSocService } from '../services/masterSocService';
 import { SecurityShieldService } from '../services/securityShieldService';
+import { GlobalThreatService } from '../services/globalThreatService';
 import { CONFIG } from '../config';
 
 export async function onGuildMemberAdd(member: GuildMember): Promise<void> {
   const guild = member.guild;
 
   try {
-    // 1. Unauthorized Bot Shield
+    // 0. Global Threat Intelligence Gatekeeper
+    const threatRecord = await GlobalThreatService.isBlacklisted(member.id);
+    if (threatRecord) {
+      console.warn(`[THREAT NETWORK] Pre-emptive ban for blacklisted actor ${member.user.tag} (${member.id}) in ${guild.name}`);
+      await member.ban({
+        reason: `[GUARD GLOBAL THREAT NETWORK] ${threatRecord.reason} (Severity: ${threatRecord.severity})`,
+      }).catch(err => console.error(`[GLOBAL BAN ERROR] Failed to ban ${member.id}:`, err));
+
+      const auditEmbed = new EmbedBuilder()
+        .setTitle('🚨 GLOBAL THREAT INTERCEPTED // PRE-EMPTIVE BAN')
+        .setColor(CONFIG.DANGER_COLOR)
+        .setDescription(
+          `Globally blacklisted threat actor attempted to infiltrate **${guild.name}** and was neutralized immediately.\n\n` +
+          `• **Target:** <@${member.id}> (\`${member.user.tag}\` | \`${member.id}\`)\n` +
+          `• **Flagged In:** \`${threatRecord.flaggedGuildId}\`\n` +
+          `• **Severity:** \`${threatRecord.severity}\`\n` +
+          `• **Reason:** ${threatRecord.reason}\n` +
+          `• **Countermeasure:** Immediate Pre-emptive Guild Ban (Welcome Dispatch Suppressed)`
+        )
+        .setThumbnail(member.user.displayAvatarURL({ size: 128 }))
+        .setFooter({ text: 'GUARD Global Threat Intelligence Network' })
+        .setTimestamp();
+
+      await MasterSocService.logAuditTelemetry(guild.client, guild.id, 'MEMBER_LOGS', auditEmbed);
+      return;
+    }
+
+    // 1. Anti-Alt & Mass-Join Gatekeeper
+    const altQuarantined = await SecurityShieldService.inspectMemberJoin(member);
+    if (altQuarantined) return;
+
+    // 2. Unauthorized Bot Shield
     if (member.user.bot) {
       await SecurityShieldService.handleBotAdd(member);
       return;

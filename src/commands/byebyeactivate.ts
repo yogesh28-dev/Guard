@@ -1,7 +1,6 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  PermissionFlagsBits,
   ChannelType,
 } from 'discord.js';
 import { updateGuildConfig } from '../db';
@@ -10,7 +9,7 @@ export const byebyeactivate = {
   data: new SlashCommandBuilder()
     .setName('byebyeactivate')
     .setDescription('Configure or activate the Twilight Goodbye Card channel and custom layout template')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+    .setDefaultMemberPermissions(0n)
     .addChannelOption(option =>
       option
         .setName('channel')

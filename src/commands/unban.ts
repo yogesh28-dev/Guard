@@ -1,7 +1,6 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  PermissionFlagsBits,
 } from 'discord.js';
 import { ModerationService } from '../services/moderationService';
 
@@ -9,7 +8,7 @@ export const unban = {
   data: new SlashCommandBuilder()
     .setName('unban')
     .setDescription('Unban a user by their user ID')
-    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
+    .setDefaultMemberPermissions(0n)
     .addStringOption(option =>
       option.setName('user_id').setDescription('The ID of the user to unban').setRequired(true)
     )

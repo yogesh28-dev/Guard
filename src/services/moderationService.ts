@@ -10,31 +10,50 @@ import {
 } from 'discord.js';
 import { updateGuildConfig, getOrCreateGuildConfig } from '../db';
 import { CONFIG } from '../config';
+import { StrikeService } from './strikeService';
 
 export interface ModerationResult {
   success: boolean;
   message: string;
   data?: any;
+  caseId?: number;
 }
 
 export class ModerationService {
   /**
-   * Ban a user from the target guild
+   * Ban a user from the target guild and register a forensic ModerationCase
    */
   public static async banUser(
     guild: Guild,
     userId: string,
     reason: string = 'No reason provided',
-    deleteMessageDays: number = 0
+    deleteMessageDays: number = 0,
+    moderatorId?: string
   ): Promise<ModerationResult> {
     try {
       await guild.bans.create(userId, {
         reason: `[GUARD SOC] ${reason}`,
         deleteMessageSeconds: deleteMessageDays * 24 * 60 * 60,
       });
+
+      const user = await guild.client.users.fetch(userId).catch(() => null);
+      const targetTag = user ? user.tag : userId;
+
+      const forensicCase = await StrikeService.createForensicCase({
+        guildId: guild.id,
+        targetId: userId,
+        targetTag,
+        moderatorId: moderatorId || guild.client.user?.id || 'SYSTEM',
+        action: 'BAN',
+        reason,
+        client: guild.client,
+      });
+
       return {
         success: true,
-        message: `Successfully banned user <@${userId}> (ID: ${userId}) for: ${reason}`,
+        message: `Successfully banned user <@${userId}> (ID: ${userId}) for: ${reason} [#CASE-${forensicCase.caseId}]`,
+        caseId: forensicCase.caseId,
+        data: { case: forensicCase },
       };
     } catch (error: any) {
       return {
@@ -67,12 +86,13 @@ export class ModerationService {
   }
 
   /**
-   * Kick a member from the target guild
+   * Kick a member from the target guild and register a forensic ModerationCase
    */
   public static async kickUser(
     guild: Guild,
     userId: string,
-    reason: string = 'No reason provided'
+    reason: string = 'No reason provided',
+    moderatorId?: string
   ): Promise<ModerationResult> {
     try {
       const member = await guild.members.fetch(userId).catch(() => null);
@@ -90,9 +110,22 @@ export class ModerationService {
       }
 
       await member.kick(`[GUARD SOC] ${reason}`);
+
+      const forensicCase = await StrikeService.createForensicCase({
+        guildId: guild.id,
+        targetId: userId,
+        targetTag: member.user?.tag || member.user?.username || userId,
+        moderatorId: moderatorId || guild.client.user?.id || 'SYSTEM',
+        action: 'KICK',
+        reason,
+        client: guild.client,
+      });
+
       return {
         success: true,
-        message: `Successfully kicked member <@${userId}> for: ${reason}`,
+        message: `Successfully kicked member <@${userId}> for: ${reason} [#CASE-${forensicCase.caseId}]`,
+        caseId: forensicCase.caseId,
+        data: { case: forensicCase },
       };
     } catch (error: any) {
       return {
@@ -103,13 +136,14 @@ export class ModerationService {
   }
 
   /**
-   * Timeout a member in minutes
+   * Timeout a member in minutes and register a forensic ModerationCase
    */
   public static async timeoutUser(
     guild: Guild,
     userId: string,
     durationMinutes: number,
-    reason: string = 'No reason provided'
+    reason: string = 'No reason provided',
+    moderatorId?: string
   ): Promise<ModerationResult> {
     try {
       const member = await guild.members.fetch(userId).catch(() => null);
@@ -128,9 +162,22 @@ export class ModerationService {
 
       const milliseconds = durationMinutes * 60 * 1000;
       await member.timeout(milliseconds, `[GUARD SOC] ${reason}`);
+
+      const forensicCase = await StrikeService.createForensicCase({
+        guildId: guild.id,
+        targetId: userId,
+        targetTag: member.user?.tag || member.user?.username || userId,
+        moderatorId: moderatorId || guild.client.user?.id || 'SYSTEM',
+        action: 'TIMEOUT',
+        reason: `${reason} (${durationMinutes}m timeout)`,
+        client: guild.client,
+      });
+
       return {
         success: true,
-        message: `Applied ${durationMinutes}m timeout to <@${userId}> for: ${reason}`,
+        message: `Applied ${durationMinutes}m timeout to <@${userId}> for: ${reason} [#CASE-${forensicCase.caseId}]`,
+        caseId: forensicCase.caseId,
+        data: { case: forensicCase },
       };
     } catch (error: any) {
       return {
@@ -141,35 +188,52 @@ export class ModerationService {
   }
 
   /**
-   * Issue a security warning to a user
+   * Issue a security warning or auto-strike escalation to a user
    */
   public static async warnUser(
     guild: Guild,
     userId: string,
-    reason: string
+    reason: string,
+    moderatorId?: string
   ): Promise<ModerationResult> {
     try {
+      const member = await guild.members.fetch(userId).catch(() => null);
+      if (member) {
+        const strikeResult = await StrikeService.issueStrike(
+          guild,
+          member,
+          moderatorId || guild.client.user?.id || 'SYSTEM',
+          reason
+        );
+
+        return {
+          success: true,
+          message: `⚠️ **STRIKE RECORDED** [#CASE-${strikeResult.caseId}]\n• Target: <@${userId}>\n• Strike Progression: **${strikeResult.strikeCount}/5**\n• Penalty Enforced: **${strikeResult.penaltyApplied}**\n• Reason: ${reason}`,
+          caseId: strikeResult.caseId,
+          data: strikeResult,
+        };
+      }
+
       const user = await guild.client.users.fetch(userId).catch(() => null);
       if (!user) {
         return { success: false, message: `Could not find user with ID ${userId}.` };
       }
 
-      const warningEmbed = new EmbedBuilder()
-        .setTitle('⚠️ GUARD SECURITY // FORMAL WARNING')
-        .setColor(CONFIG.WARN_COLOR)
-        .setDescription(
-          `You received a security warning in **${guild.name}**.\n\n` +
-          `**Reason:** ${reason}\n` +
-          `**Timestamp:** <t:${Math.floor(Date.now() / 1000)}:F>`
-        )
-        .setFooter({ text: 'Enterprise SOC Automated Enforcement' })
-        .setTimestamp();
-
-      await user.send({ embeds: [warningEmbed] }).catch(() => null);
+      const forensicCase = await StrikeService.createForensicCase({
+        guildId: guild.id,
+        targetId: userId,
+        targetTag: user.tag || userId,
+        moderatorId: moderatorId || guild.client.user?.id || 'SYSTEM',
+        action: 'WARN',
+        reason,
+        client: guild.client,
+      });
 
       return {
         success: true,
-        message: `Warning recorded and dispatched to <@${userId}> for: ${reason}`,
+        message: `Warning recorded for <@${userId}>: ${reason} [#CASE-${forensicCase.caseId}]`,
+        caseId: forensicCase.caseId,
+        data: { case: forensicCase },
       };
     } catch (error: any) {
       return {

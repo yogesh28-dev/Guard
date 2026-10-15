@@ -14,6 +14,7 @@ import { prisma } from '../db';
 export class BotStatusMonitorService {
   private static cronTask: ScheduledTask | null = null;
   public static reconnectAttempts = 0;
+  public static blockedThreatCount = 0;
 
   /**
    * Ensures the dedicated #bot-status channel exists in the Master Guild

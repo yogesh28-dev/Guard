@@ -19,11 +19,45 @@ model GuildConfig {
   auditVcLogChannelId      String?
   auditServerLogChannelId  String?
   auditMessageLogChannelId String?
+  honeypotChannelId        String?
+  minAccountAgeDays        Int      @default(1)
+  autoEscalationEnabled    Boolean  @default(true)
   antiNukeEnabled          Boolean  @default(true)
   antiRaidEnabled          Boolean  @default(true)
   isLockedDown             Boolean  @default(false)
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
+}
+
+model ModerationCase {
+  caseId       Int      @id @default(autoincrement())
+  guildId      String
+  targetId     String
+  targetTag    String
+  moderatorId  String
+  action       String   // WARN, TIMEOUT, KICK, BAN, QUARANTINE, AUTO_STRIKE
+  reason       String
+  evidenceJson String?
+  createdAt    DateTime @default(now())
+}
+
+model UserStrike {
+  id           String   @id @default(cuid())
+  guildId      String
+  userId       String
+  strikeCount  Int      @default(0)
+  lastStrikeAt DateTime @default(now())
+
+  @@unique([guildId, userId])
+}
+
+model GlobalBlacklist {
+  userId         String   @id
+  userTag        String?
+  reason         String
+  flaggedGuildId String
+  severity       String   @default("CRITICAL") // CRITICAL, HIGH, MEDIUM
+  createdAt      DateTime @default(now())
 }
 
 model SecurityIncident {

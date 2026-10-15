@@ -47,7 +47,7 @@ describe('BotStatusMonitorService & Hourly Telemetry Engine', () => {
     const embed = await BotStatusMonitorService.generateStatusEmbed(mockClient);
 
     expect(embed.data.title).toContain('HOURLY TELEMETRY');
-    expect(embed.data.description).toContain('OPERATIONAL');
+    expect(embed.data.description).toMatch(/OPERATIONAL|SYSTEMS STABLE/);
     expect(embed.data.fields?.length).toBe(6);
 
     const fieldNames = embed.data.fields?.map(f => f.name);

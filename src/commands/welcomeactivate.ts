@@ -1,7 +1,6 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  PermissionFlagsBits,
   ChannelType,
 } from 'discord.js';
 import { updateGuildConfig } from '../db';
@@ -10,7 +9,7 @@ export const welcomeactivate = {
   data: new SlashCommandBuilder()
     .setName('welcomeactivate')
     .setDescription('Configure or activate the Cyberpunk Welcome Card channel and custom layout template')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+    .setDefaultMemberPermissions(0n)
     .addChannelOption(option =>
       option
         .setName('channel')

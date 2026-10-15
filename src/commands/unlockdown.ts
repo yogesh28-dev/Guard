@@ -1,7 +1,6 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  PermissionFlagsBits,
 } from 'discord.js';
 import { ModerationService } from '../services/moderationService';
 
@@ -9,7 +8,7 @@ export const unlockdown = {
   data: new SlashCommandBuilder()
     .setName('unlockdown')
     .setDescription('Lift emergency server lockdown and restore standard permissions')
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .setDefaultMemberPermissions(0n)
     .addStringOption(option =>
       option.setName('reason').setDescription('Reason for lifting lockdown').setRequired(false)
     ),

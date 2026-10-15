@@ -1,15 +1,16 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  PermissionFlagsBits,
+  EmbedBuilder,
 } from 'discord.js';
 import { ModerationService } from '../services/moderationService';
+import { CONFIG } from '../config';
 
 export const timeout = {
   data: new SlashCommandBuilder()
     .setName('timeout')
     .setDescription('Timeout/mute a member for a specified duration')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+    .setDefaultMemberPermissions(0n)
     .addUserOption(option =>
       option.setName('user').setDescription('The member to timeout').setRequired(true)
     )
@@ -37,9 +38,30 @@ export const timeout = {
       interaction.guild,
       user.id,
       duration,
-      `${reason} (Issued by ${interaction.user.tag})`
+      `${reason} (Issued by ${interaction.user.tag})`,
+      interaction.user.id
     );
 
-    await interaction.editReply({ content: result.message });
+    if (!result.success) {
+      await interaction.editReply({ content: `❌ ${result.message}` });
+      return;
+    }
+
+    const caseBadge = result.caseId ? `#CASE-${result.caseId}` : 'RECORDED';
+    const embed = new EmbedBuilder()
+      .setTitle(`⏱️ TIMEOUT APPLIED // ${caseBadge}`)
+      .setColor(CONFIG.WARN_COLOR)
+      .setDescription(`Member **${user.tag}** has been timed out.`)
+      .addFields(
+        { name: '📋 Forensic Case', value: `\`${caseBadge}\``, inline: true },
+        { name: '👤 Target', value: `<@${user.id}> (\`${user.id}\`)`, inline: true },
+        { name: '⏳ Duration', value: `\`${duration} minutes\``, inline: true },
+        { name: '👮 Moderator', value: `<@${interaction.user.id}>`, inline: true },
+        { name: '📝 Reason', value: reason, inline: false }
+      )
+      .setFooter({ text: 'GUARD Enterprise SOC // Enforcement Grid' })
+      .setTimestamp();
+
+    await interaction.editReply({ embeds: [embed] });
   },
 };

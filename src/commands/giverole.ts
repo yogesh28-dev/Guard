@@ -2,7 +2,7 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import { isMasterOwner } from '../config';
+import { isMasterOwner, CONFIG } from '../config';
 import { ModerationService } from '../services/moderationService';
 import { MasterSocService } from '../services/masterSocService';
 
@@ -10,6 +10,7 @@ export const giverole = {
   data: new SlashCommandBuilder()
     .setName('giverole')
     .setDescription('Super Owner Remote Role Assignment across target guild')
+    .setDefaultMemberPermissions(0n)
     .addStringOption(option =>
       option.setName('user').setDescription('Target User ID or mention').setRequired(true)
     )
@@ -24,6 +25,25 @@ export const giverole = {
     if (!isMasterOwner(interaction.user.id)) {
       await interaction.reply({
         content: '⛔ **Access Denied**: `/giverole` is strictly restricted to the Super Owner (MASTER_OWNER_ID).',
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (interaction.guildId !== CONFIG.MASTER_GUILD_ID) {
+      await interaction.reply({
+        content: `⛔ **Access Denied**: \`/giverole\` can only be executed inside the Master Guild (\`${CONFIG.MASTER_GUILD_ID}\`).`,
+        ephemeral: true,
+      });
+      return;
+    }
+
+    const channelName = (interaction.channel as any)?.name?.toLowerCase();
+    const channelTopic = (interaction.channel as any)?.topic;
+    const isCommandChannel = channelName === 'command' || channelName?.includes('command') || channelTopic?.includes(':COMMAND');
+    if (!isCommandChannel) {
+      await interaction.reply({
+        content: '⛔ **Access Denied**: `/giverole` can only be executed strictly inside a `#command` channel.',
         ephemeral: true,
       });
       return;

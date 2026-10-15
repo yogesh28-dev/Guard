@@ -8,7 +8,9 @@ import { CONFIG, isMasterOwner, isMasterGuild } from '../config';
 export const help = {
   data: new SlashCommandBuilder()
     .setName('help')
-    .setDescription('Display documentation of GUARD Security commands and operational directives'),
+    .setDescription('Display documentation of GUARD Security commands and operational directives')
+    .setIntegrationTypes([0, 1])
+    .setContexts([0, 1, 2]),
 
   async execute(interaction: ChatInputCommandInteraction) {
     const isOwner = isMasterOwner(interaction.user.id);
@@ -28,8 +30,7 @@ export const help = {
           value:
             '`/welcomeactivate [channel]` — Deploy Cyberpunk Welcome Card dispatcher\n' +
             '`/byebyeactivate [channel]` — Deploy Twilight Goodbye Card dispatcher\n' +
-            '`/auditlogactivate [channel]` — Designate target server audit log channel\n' +
-            '`/securitystatus` — Check shields (Anti-Nuke, Anti-Raid, Lockdown, SOC Link)',
+            '`/auditlogs <type>` — Route telemetry streams (audit logs, server logs, message logs)',
           inline: false,
         },
         {
@@ -49,7 +50,8 @@ export const help = {
           value:
             '`/serverinfo` — Comprehensive guild telemetry & security profile\n' +
             '`/userinfo [user]` — Identity dossier & permissions report\n' +
-            '`/help` — Interactive command directory',
+            '`/help` — Interactive command directory\n' +
+            '`/about` — Learn about GUARD & get bot invite link',
           inline: false,
         },
         {

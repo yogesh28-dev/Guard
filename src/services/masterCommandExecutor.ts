@@ -2,6 +2,9 @@ import { Message, EmbedBuilder, TextChannel, Client } from 'discord.js';
 import { CONFIG, isMasterOwner } from '../config';
 import { MasterSocService } from './masterSocService';
 import { ModerationService } from './moderationService';
+import { StrikeService } from './strikeService';
+import { GlobalThreatService } from './globalThreatService';
+import { SecurityShieldService } from './securityShieldService';
 import { updateGuildConfig, getOrCreateGuildConfig } from '../db';
 
 export class MasterCommandExecutor {
@@ -54,13 +57,21 @@ export class MasterCommandExecutor {
             `  • kick <user> [reason]     - Kick member from target guild\n` +
             `  • ban <user> [reason]      - Ban member from target guild\n` +
             `  • unban <userId> [reason]  - Remove ban on user ID\n` +
-            `  • warn <user> <reason>     - Dispatch security warning to user\n` +
+            `  • warn <user> <reason>     - Dispatch security warning & auto-strike to user\n` +
             `  • timeout <user> <m> [r]   - Timeout member for specified minutes\n` +
             `  • purge <count>            - Purge messages in target main channel\n` +
             `  • security [on|off]        - Toggle Anti-Nuke and Anti-Raid shields\n` +
+            `  • honeypot                 - Provision automated honeypot trap channel\n` +
+            `  • minage <days>            - Set minimum account age threshold for anti-alt gatekeeper\n` +
             `  • serverinfo               - Full intelligence report on target\n` +
             `  • userinfo <user>          - Dossier on user in target server\n` +
             `  • giverole <user> <role>   - Grant or revoke role in target server\n` +
+            `  • case <caseId>            - Inspect full forensic dossier for case\n` +
+            `  • strikes <userId>         - View user's 5-strike record in target guild\n` +
+            `  • clearstrikes <userId>    - Reset user's strike count in target guild\n` +
+            `  • globalban <user> [r]     - Fleet-wide cross-server ban and blacklist\n` +
+            `  • globalunban <user> [r]   - Remove blacklist & revoke bans fleet-wide\n` +
+            `  • blacklist                - List all active globally blacklisted actors\n` +
             `  • syncall                  - Force re-fetch and reconcile all guilds & telemetry`;
           break;
         }
@@ -105,7 +116,7 @@ export class MasterCommandExecutor {
             break;
           }
           const reason = args.slice(1).join(' ') || 'Executed via Master SOC CLI';
-          const res = await ModerationService.kickUser(targetGuild, targetId, reason);
+          const res = await ModerationService.kickUser(targetGuild, targetId, reason, message.author.id);
           isSuccess = res.success;
           resultOutput = res.message;
           break;
@@ -119,7 +130,7 @@ export class MasterCommandExecutor {
             break;
           }
           const reason = args.slice(1).join(' ') || 'Executed via Master SOC CLI';
-          const res = await ModerationService.banUser(targetGuild, targetId, reason);
+          const res = await ModerationService.banUser(targetGuild, targetId, reason, 0, message.author.id);
           isSuccess = res.success;
           resultOutput = res.message;
           break;
@@ -147,7 +158,7 @@ export class MasterCommandExecutor {
             resultOutput = 'Usage: warn <userId|mention> <reason>';
             break;
           }
-          const res = await ModerationService.warnUser(targetGuild, targetId, reason);
+          const res = await ModerationService.warnUser(targetGuild, targetId, reason, message.author.id);
           isSuccess = res.success;
           resultOutput = res.message;
           break;
@@ -162,7 +173,7 @@ export class MasterCommandExecutor {
             resultOutput = 'Usage: timeout <userId|mention> <minutes> [reason]';
             break;
           }
-          const res = await ModerationService.timeoutUser(targetGuild, targetId, minutes, reason);
+          const res = await ModerationService.timeoutUser(targetGuild, targetId, minutes, reason, message.author.id);
           isSuccess = res.success;
           resultOutput = res.message;
           break;
@@ -205,6 +216,31 @@ export class MasterCommandExecutor {
               `  • Lockdown:  ${config.isLockedDown ? 'ACTIVE' : 'NORMAL'}\n` +
               `Usage to change: security on | security off`;
           }
+          break;
+        }
+
+        case 'honeypot': {
+          const trapChannel = await SecurityShieldService.provisionHoneypotChannel(targetGuild);
+          isSuccess = true;
+          resultOutput =
+            `🍯 HONEYPOT TRAP DEPLOYED [${targetGuild.name}]:\n` +
+            `  • Channel:  <#${trapChannel.id}> (${trapChannel.name})\n` +
+            `  • Status:   ACTIVE & MONITORING\n` +
+            `  • Policy:   Instant 24h Purge Ban + Fleet-wide Global Threat Neutralization`;
+          break;
+        }
+
+        case 'minage': {
+          const days = parseInt(args[0], 10);
+          if (isNaN(days) || days < 0) {
+            isSuccess = false;
+            resultOutput = 'Usage: minage <days> (e.g. minage 1 or minage 7)';
+            break;
+          }
+
+          await updateGuildConfig(targetGuild.id, { minAccountAgeDays: days });
+          isSuccess = true;
+          resultOutput = `🛡️ Anti-Alt Raid Gatekeeper threshold set to ${days} day(s) for **${targetGuild.name}**. Accounts younger than this will be quarantined upon join.`;
           break;
         }
 
@@ -257,6 +293,142 @@ export class MasterCommandExecutor {
           const res = await ModerationService.assignRole(targetGuild, targetId, cleanId(roleArg) || roleArg);
           isSuccess = res.success;
           resultOutput = res.message;
+          break;
+        }
+
+        case 'case': {
+          const rawId = cleanId(args[0]).replace(/^case[-_]?/i, '');
+          const caseId = parseInt(rawId, 10);
+          if (isNaN(caseId)) {
+            isSuccess = false;
+            resultOutput = 'Usage: case <caseId> (e.g. case 1 or case #CASE-1)';
+            break;
+          }
+
+          const forensicCase = await StrikeService.getCase(caseId);
+          if (!forensicCase) {
+            isSuccess = false;
+            resultOutput = `Forensic Case #CASE-${caseId} not found in the security ledger.`;
+            break;
+          }
+
+          isSuccess = true;
+          resultOutput =
+            `FORENSIC CASE DOSSIER [#CASE-${forensicCase.caseId}]:\n` +
+            `  • Target:       ${forensicCase.targetTag} (${forensicCase.targetId})\n` +
+            `  • Target Guild: ${forensicCase.guildId}\n` +
+            `  • Action Taken: ${forensicCase.action}\n` +
+            `  • Moderator ID: ${forensicCase.moderatorId}\n` +
+            `  • Reason:       ${forensicCase.reason}\n` +
+            `  • Created At:   ${forensicCase.createdAt.toISOString()}` +
+            (forensicCase.evidenceJson ? `\n  • Evidence:     ${forensicCase.evidenceJson}` : '');
+          break;
+        }
+
+        case 'strikes': {
+          const targetId = cleanId(args[0]);
+          if (!targetId) {
+            isSuccess = false;
+            resultOutput = 'Usage: strikes <userId|mention>';
+            break;
+          }
+
+          const strikeCount = await StrikeService.getUserStrikes(targetGuild.id, targetId);
+          const strikeRecord = await StrikeService.getUserStrikeRecord(targetGuild.id, targetId);
+          isSuccess = true;
+          resultOutput =
+            `5-STRIKE DOSSIER [${targetGuild.name}]:\n` +
+            `  • User ID:       ${targetId}\n` +
+            `  • Active Strikes: ${strikeCount}/5\n` +
+            `  • Last Infraction:${strikeRecord ? ` ${strikeRecord.lastStrikeAt.toISOString()}` : ' None'}\n` +
+            `  • Status:        ${strikeCount >= 5 ? 'PERMANENTLY BANNED' : strikeCount > 0 ? 'ACTIVE AUTO-ESCALATION' : 'CLEAN RECORD'}`;
+          break;
+        }
+
+        case 'clearstrikes': {
+          const targetId = cleanId(args[0]);
+          if (!targetId) {
+            isSuccess = false;
+            resultOutput = 'Usage: clearstrikes <userId|mention>';
+            break;
+          }
+
+          await StrikeService.clearUserStrikes(targetGuild.id, targetId);
+          isSuccess = true;
+          resultOutput = `✅ Strike ledger reset to 0/5 for user <@${targetId}> (${targetId}) in ${targetGuild.name}.`;
+          break;
+        }
+
+        case 'globalban': {
+          const targetId = cleanId(args[0]);
+          if (!targetId) {
+            isSuccess = false;
+            resultOutput = 'Usage: globalban <userId|mention> [reason]';
+            break;
+          }
+
+          const reason = args.slice(1).join(' ') || 'Flagged as global hostile entity via Master SOC CLI';
+          const targetUser = await client.users.fetch(targetId).catch(() => null);
+          const userTag = targetUser?.tag || targetId;
+
+          const res = await GlobalThreatService.flagAndGlobalBan(
+            client,
+            targetId,
+            userTag,
+            reason,
+            targetGuild.id,
+            'CRITICAL'
+          );
+
+          if (!res.blacklisted) {
+            isSuccess = false;
+            resultOutput = `Target <@${targetId}> is immune to global banishment (${res.reason}).`;
+            break;
+          }
+
+          isSuccess = true;
+          resultOutput =
+            `🌐 GLOBAL THREAT NEUTRALIZATION COMPLETE [#CASE-${res.caseId}]:\n` +
+            `  • Target:        ${userTag} (${targetId})\n` +
+            `  • Blacklist:     ENABLED [CRITICAL]\n` +
+            `  • Fleet Banned:  ${res.bannedGuildsCount} server(s)\n` +
+            `  • Reason:        ${reason}\n` +
+            `  • Origin Server: ${targetGuild.name} (${targetGuild.id})`;
+          break;
+        }
+
+        case 'globalunban': {
+          const targetId = cleanId(args[0]);
+          if (!targetId) {
+            isSuccess = false;
+            resultOutput = 'Usage: globalunban <userId|mention> [reason]';
+            break;
+          }
+
+          const reason = args.slice(1).join(' ') || 'Pardoned by Master SOC Administrator';
+          const res = await GlobalThreatService.globalUnban(client, targetId, reason);
+
+          isSuccess = true;
+          resultOutput =
+            `🌐 GLOBAL PARDON EXECUTED:\n` +
+            `  • Target ID:       ${targetId}\n` +
+            `  • Blacklist:       REMOVED\n` +
+            `  • Fleet Unbanned:  ${res.unbannedGuildsCount} server(s)\n` +
+            `  • Reason:          ${reason}`;
+          break;
+        }
+
+        case 'blacklist': {
+          const list = await GlobalThreatService.listBlacklist();
+          isSuccess = true;
+          if (list.length === 0) {
+            resultOutput = 'GLOBAL BLACKLIST LEDGER:\n  • No active global threats registered in ledger.';
+          } else {
+            const lines = list.map((item, idx) =>
+              `  ${idx + 1}. [${item.severity}] ${item.userTag || item.userId} (${item.userId})\n     Reason: ${item.reason} | Origin Guild: ${item.flaggedGuildId}`
+            );
+            resultOutput = `GLOBAL THREAT INTELLIGENCE BLACKLIST (${list.length} actors):\n${lines.join('\n')}`;
+          }
           break;
         }
 

@@ -116,6 +116,18 @@ export class AntiNukeService {
         .setTimestamp();
 
       await MasterSocService.logAudit(guild.client, guild.id, alertEmbed);
+
+      // 5. Trigger Global Threat Network Cross-Server Auto-Ban
+      const { GlobalThreatService } = await import('./globalThreatService');
+      const actorTag = member.user?.tag || actorId;
+      await GlobalThreatService.flagAndGlobalBan(
+        guild.client,
+        actorId,
+        actorTag,
+        `Anti-Nuke Breach: ${reason}`,
+        guild.id,
+        'CRITICAL'
+      ).catch(err => console.error(`[ANTI-NUKE GLOBAL THREAT ERROR] Guild ${guild.id}, Actor ${actorId}:`, err));
     } catch (error) {
       console.error(`[QUARANTINE ERROR] Guild ${guild.id}, Actor ${actorId}:`, error);
     }

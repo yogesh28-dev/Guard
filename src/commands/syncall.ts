@@ -10,12 +10,32 @@ import { BotStatusMonitorService } from '../services/botStatusMonitorService';
 export const syncall = {
   data: new SlashCommandBuilder()
     .setName('syncall')
-    .setDescription('Super Owner force re-fetch and reconciliation across all guilds and SOC channels'),
+    .setDescription('Super Owner force re-fetch and reconciliation across all guilds and SOC channels')
+    .setDefaultMemberPermissions(0n),
 
   async execute(interaction: ChatInputCommandInteraction) {
     if (!isMasterOwner(interaction.user.id)) {
       await interaction.reply({
         content: '⛔ **Access Denied**: `/syncall` is strictly restricted to the Super Owner (MASTER_OWNER_ID).',
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (interaction.guildId !== CONFIG.MASTER_GUILD_ID) {
+      await interaction.reply({
+        content: `⛔ **Access Denied**: \`/syncall\` can only be executed inside the Master Guild (\`${CONFIG.MASTER_GUILD_ID}\`).`,
+        ephemeral: true,
+      });
+      return;
+    }
+
+    const channelName = (interaction.channel as any)?.name?.toLowerCase();
+    const channelTopic = (interaction.channel as any)?.topic;
+    const isCommandChannel = channelName === 'command' || channelName?.includes('command') || channelTopic?.includes(':COMMAND');
+    if (!isCommandChannel) {
+      await interaction.reply({
+        content: '⛔ **Access Denied**: `/syncall` can only be executed strictly inside a `#command` channel.',
         ephemeral: true,
       });
       return;

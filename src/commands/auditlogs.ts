@@ -1,7 +1,6 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  PermissionFlagsBits,
   ChannelType,
 } from 'discord.js';
 import { updateGuildConfig } from '../db';
@@ -10,7 +9,7 @@ export const auditlogs = {
   data: new SlashCommandBuilder()
     .setName('auditlogs')
     .setDescription('Configure the current channel to route a specific category of security and audit telemetry')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+    .setDefaultMemberPermissions(0n)
     .addStringOption(option =>
       option
         .setName('type')

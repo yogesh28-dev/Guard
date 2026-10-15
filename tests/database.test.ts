@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
   prisma,
   getOrCreateGuildConfig,
@@ -19,6 +19,13 @@ describe('Database Models & Telemetry Snapshots', () => {
   const testChannelId = '111222333444555666';
   const testRoleId = '777888999000111222';
 
+  beforeAll(async () => {
+    await prisma.guildConfig.deleteMany({ where: { guildId: testGuildId } }).catch(() => null);
+    await prisma.securityIncident.deleteMany({ where: { guildId: testGuildId } }).catch(() => null);
+    await prisma.channelSnapshot.deleteMany({ where: { guildId: testGuildId } }).catch(() => null);
+    await prisma.roleSnapshot.deleteMany({ where: { guildId: testGuildId } }).catch(() => null);
+  });
+
   afterAll(async () => {
     await prisma.guildConfig.deleteMany({ where: { guildId: testGuildId } }).catch(() => null);
     await prisma.securityIncident.deleteMany({ where: { guildId: testGuildId } }).catch(() => null);
@@ -33,6 +40,8 @@ describe('Database Models & Telemetry Snapshots', () => {
     expect(config.antiNukeEnabled).toBe(true);
     expect(config.antiRaidEnabled).toBe(true);
     expect(config.isLockedDown).toBe(false);
+    expect(config.minAccountAgeDays).toBe(1);
+    expect(config.autoEscalationEnabled).toBe(true);
   });
 
   it('should update GuildConfig log routing and custom template fields', async () => {
@@ -44,6 +53,9 @@ describe('Database Models & Telemetry Snapshots', () => {
       auditVcLogChannelId: '333333333333333333',
       auditServerLogChannelId: '444444444444444444',
       auditMessageLogChannelId: '555555555555555555',
+      honeypotChannelId: '666666666666666666',
+      minAccountAgeDays: 7,
+      autoEscalationEnabled: true,
     });
 
     expect(updated.welcomeTemplateUrl).toBe('https://cdn.discordapp.com/template-welcome.png');
@@ -51,6 +63,9 @@ describe('Database Models & Telemetry Snapshots', () => {
     expect(updated.auditVcLogChannelId).toBe('333333333333333333');
     expect(updated.auditServerLogChannelId).toBe('444444444444444444');
     expect(updated.auditMessageLogChannelId).toBe('555555555555555555');
+    expect(updated.honeypotChannelId).toBe('666666666666666666');
+    expect(updated.minAccountAgeDays).toBe(7);
+    expect(updated.autoEscalationEnabled).toBe(true);
   });
 
   it('should record security incidents and retrieve 24h stats', async () => {

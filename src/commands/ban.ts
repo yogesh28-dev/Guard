@@ -1,15 +1,16 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  PermissionFlagsBits,
+  EmbedBuilder,
 } from 'discord.js';
 import { ModerationService } from '../services/moderationService';
+import { CONFIG } from '../config';
 
 export const ban = {
   data: new SlashCommandBuilder()
     .setName('ban')
     .setDescription('Ban a user from the server')
-    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
+    .setDefaultMemberPermissions(0n)
     .addUserOption(option =>
       option.setName('user').setDescription('The user to ban').setRequired(true)
     )
@@ -37,9 +38,29 @@ export const ban = {
       interaction.guild,
       user.id,
       `${reason} (Issued by ${interaction.user.tag})`,
-      deleteDays
+      deleteDays,
+      interaction.user.id
     );
 
-    await interaction.editReply({ content: result.message });
+    if (!result.success) {
+      await interaction.editReply({ content: `❌ ${result.message}` });
+      return;
+    }
+
+    const caseBadge = result.caseId ? `#CASE-${result.caseId}` : 'RECORDED';
+    const embed = new EmbedBuilder()
+      .setTitle(`🔨 GUILD BAN ENFORCED // ${caseBadge}`)
+      .setColor(CONFIG.DANGER_COLOR)
+      .setDescription(`User **${user.tag}** has been banned from the server.`)
+      .addFields(
+        { name: '📋 Forensic Case', value: `\`${caseBadge}\``, inline: true },
+        { name: '👤 Target', value: `<@${user.id}> (\`${user.id}\`)`, inline: true },
+        { name: '👮 Moderator', value: `<@${interaction.user.id}>`, inline: true },
+        { name: '📝 Reason', value: reason, inline: false }
+      )
+      .setFooter({ text: 'GUARD Enterprise SOC // Enforcement Grid' })
+      .setTimestamp();
+
+    await interaction.editReply({ embeds: [embed] });
   },
 };
